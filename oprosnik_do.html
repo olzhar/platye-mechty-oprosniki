@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         // Инициализация EmailJS
         (function(){
@@ -557,17 +558,8 @@
                         </div>
                         <div class="form-group">
                             <label for="age">Возраст (лет) *</label>
-                            <input type="number" id="age" name="age" min="18" max="100" required>
+<input type="number" id="age" name="age" min="18" max="100" required>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email *</label>
-                        <input type="email" id="email" name="email" required>
-                        <p class="info-text">На этот адрес придут результаты и сравнение после прохождения программы</p>
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Телефон (опционально)</label>
-                        <input type="tel" id="phone" name="phone" placeholder="+7 (___) ___-__-__">
                     </div>
                 </div>
 
@@ -667,6 +659,9 @@
                     <div style="font-size: 0.9em; margin-top: 15px; opacity: 0.9;">
                         ⚠️ Сохраните этот код! Он понадобится после прохождения программы для сравнения результатов.
                     </div>
+                    <button id="downloadPdfBtn" style="margin-top: 25px; background: #d4af7a; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                        📄 Скачать результаты в PDF
+                    </button>
                 </div>
                 <div class="message-box error-message" id="errorMessage">
                     ✗ Произошла ошибка при отправке. Пожалуйста, попробуйте ещё раз.
@@ -826,9 +821,9 @@
         });
 
         // Генерация уникального кода клиента
-        function generateClientCode(name, email) {
+        function generateClientCode(name, age) {
             const timestamp = Date.now();
-            const combined = `${name}_${email}_${timestamp}`;
+            const combined = `${name}_${age}_${timestamp}`;
             const hash = CryptoJS.MD5(combined).toString();
             return hash.substring(0, 8).toUpperCase();
         }
@@ -847,7 +842,7 @@
             const formData = new FormData(this);
             
             // Генерируем уникальный код
-            const clientCode = generateClientCode(formData.get('name'), formData.get('email'));
+            const clientCode = generateClientCode(formData.get('name'), formData.get('age'));
             
             // Собираем данные о симптомах
             let symptomsData = [];
@@ -889,8 +884,6 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Имя: ${formData.get('name')}
 Возраст: ${formData.get('age')} лет
-Email: ${formData.get('email')}
-Телефон: ${formData.get('phone') || 'не указан'}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 АНТРОПОМЕТРИЯ ДО:
@@ -935,9 +928,7 @@ ${formData.get('comments') || 'нет'}
                 timestamp: new Date().toISOString(),
                 personalData: {
                     name: formData.get('name'),
-                    age: formData.get('age'),
-                    email: formData.get('email'),
-                    phone: formData.get('phone')
+                    age: formData.get('age')
                 },
                 measurements: {
                     weight: formData.get('weight'),
@@ -960,36 +951,161 @@ ${formData.get('comments') || 'нет'}
             
             localStorage.setItem(`survey_before_${clientCode}`, JSON.stringify(surveyData));
             
-            // Отправка через EmailJS
-            const templateParams = {
-                to_email: 'ol_zubova@mail.ru',
-                reply_to: formData.get('email'),
-                from_name: formData.get('name'),
-                client_code: clientCode,
-                subject: `[ДО ПРОГРАММЫ] ${formData.get('name')} (${clientCode})`,
-                message: fullMessage
+            // Показываем успех и код клиенту
+            document.getElementById('clientCode').textContent = clientCode;
+            document.getElementById('successMessage').classList.add('show');
+            loader.classList.remove('show');
+            submitBtn.style.display = 'none';
+            document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+            // Сохраняем данные для PDF
+            window.surveyDataForPdf = {
+                clientCode,
+                formData,
+                symptomsData,
+                habitsData,
+                fullMessage
             };
+        });
+        
+        // Функция генерации PDF
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const data = window.surveyDataForPdf;
             
-            emailjs.send('service_9m21buc', 'template_c57zr5l', templateParams)
-                .then(function(response) {
-                    console.log('SUCCESS!', response.status, response.text);
-                    
-                    // Показываем код клиенту
-                    document.getElementById('clientCode').textContent = clientCode;
-                    document.getElementById('successMessage').classList.add('show');
-                    loader.classList.remove('show');
-                    submitBtn.style.display = 'none';
-                    document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, function(error) {
-                    console.error('FAILED...', error);
-                    
-                    // Показываем ошибку
-                    loader.classList.remove('show');
-                    document.getElementById('errorMessage').textContent = 'Ошибка отправки. Попробуйте ещё раз или свяжитесь с Ольгой Жарковой.';
-                    document.getElementById('errorMessage').classList.add('show');
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Отправить результаты';
+            // Настройка шрифта (поддержка кириллицы через обход)
+            doc.setFont("helvetica");
+            
+            let y = 20;
+            const lineHeight = 7;
+            const margin = 20;
+            const maxWidth = 170;
+            
+            // Заголовок
+            doc.setFontSize(18);
+            doc.setTextColor(212, 175, 122);
+            doc.text("PLATYE MECHTY", 105, y, { align: 'center' });
+            y += 10;
+            
+            doc.setFontSize(14);
+            doc.text("Rezultaty DO programmy", 105, y, { align: 'center' });
+            y += 15;
+            
+            // Код клиента
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Kod klienta: ${data.clientCode}`, margin, y);
+            y += 10;
+            
+            doc.setFontSize(10);
+            doc.text(`Data: ${new Date().toLocaleString('ru-RU')}`, margin, y);
+            y += 10;
+            
+            // Функция для добавления текста с переносом
+            function addText(text, fontSize = 10) {
+                doc.setFontSize(fontSize);
+                const lines = doc.splitTextToSize(text, maxWidth);
+                lines.forEach(line => {
+                    if (y > 270) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    doc.text(line, margin, y);
+                    y += lineHeight;
                 });
+            }
+            
+            // Личные данные
+            y += 5;
+            doc.setFontSize(12);
+            doc.setTextColor(212, 175, 122);
+            doc.text("LICHNYE DANNYE", margin, y);
+            doc.setTextColor(0, 0, 0);
+            y += 8;
+            
+            addText(`Imya: ${data.formData.get('name')}`);
+            addText(`Vozrast: ${data.formData.get('age')} let`);
+            y += 3;
+            
+            // Антропометрия
+            doc.setFontSize(12);
+            doc.setTextColor(212, 175, 122);
+            doc.text("ANTROPOMETRIYA", margin, y);
+            doc.setTextColor(0, 0, 0);
+            y += 8;
+            
+            addText(`Ves: ${data.formData.get('weight')} kg`);
+            addText(`Rost: ${data.formData.get('height')} sm`);
+            if (data.formData.get('chest')) addText(`Grud: ${data.formData.get('chest')} sm`);
+            if (data.formData.get('waist')) addText(`Taliya: ${data.formData.get('waist')} sm`);
+            if (data.formData.get('hips')) addText(`Bedra: ${data.formData.get('hips')} sm`);
+            y += 3;
+            
+            // Симптомы
+            doc.setFontSize(12);
+            doc.setTextColor(212, 175, 122);
+            doc.text("SIMPTOMY", margin, y);
+            doc.setTextColor(0, 0, 0);
+            y += 8;
+            
+            if (data.symptomsData.length > 0) {
+                data.symptomsData.forEach((s, i) => {
+                    addText(`${i + 1}. ${s.symptom} -> ${s.intensity}/10`);
+                });
+            } else {
+                addText("Net simptomov");
+            }
+            y += 3;
+            
+            // Привычки
+            doc.setFontSize(12);
+            doc.setTextColor(212, 175, 122);
+            doc.text("PRIVYCHKI", margin, y);
+            doc.setTextColor(0, 0, 0);
+            y += 8;
+            
+            if (data.habitsData.length > 0) {
+                data.habitsData.forEach((h, i) => {
+                    addText(`${i + 1}. ${h}`);
+                });
+            } else {
+                addText("Net privychek");
+            }
+            y += 3;
+            
+            // Цели
+            doc.setFontSize(12);
+            doc.setTextColor(212, 175, 122);
+            doc.text("CELI", margin, y);
+            doc.setTextColor(0, 0, 0);
+            y += 8;
+            
+            addText(`Fizicheskoe: ${data.formData.get('goal_physical') || 'ne ukazano'}`);
+            y += 2;
+            addText(`Emocionalnoe: ${data.formData.get('goal_emotional') || 'ne ukazano'}`);
+            y += 2;
+            addText(`Obraz "Novaya Ya": ${data.formData.get('goal_dream_dress') || 'ne ukazano'}`);
+            y += 5;
+            
+            // Общая оценка
+            doc.setFontSize(12);
+            addText(`Obshhaya ocenka: ${data.formData.get('overall')}/10`);
+            
+            // Футер
+            doc.setFontSize(8);
+            doc.setTextColor(150, 150, 150);
+            doc.text("Platye Mechty - Olga Zharkova", 105, 285, { align: 'center' });
+            
+            // Сохранение
+            doc.save(`Platye_Mechty_DO_${data.clientCode}.pdf`);
+        }
+        
+        // Обработчик кнопки скачивания PDF
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.id === 'downloadPdfBtn') {
+                generatePDF();
+            }
         });
     </script>
 </body>

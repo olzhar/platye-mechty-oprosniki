@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         // Инициализация EmailJS
         (function(){
@@ -569,15 +570,6 @@
                             <input type="number" id="age" name="age" min="18" max="100" required>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="email">Email *</label>
-                        <input type="email" id="email" name="email" required>
-                        <p class="info-text">На этот адрес придут результаты и сравнение после прохождения программы</p>
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Телефон (опционально)</label>
-                        <input type="tel" id="phone" name="phone" placeholder="+7 (___) ___-__-__">
-                    </div>
                 </div>
 
                 <!-- Антропометрические данные -->
@@ -682,14 +674,13 @@
                 <button type="submit" class="submit-btn" id="submitBtn">Отправить результаты</button>
                 <div class="loader" id="loader"></div>
                 <div class="message-box success-message" id="successMessage">
-                    ✓ Спасибо! Ваши результаты сохранены!<br><br>
+                    ✓ Поздравляем! Вы завершили программу!<br><br>
                     <div style="font-size: 0.95em; margin: 15px 0;">
-                        Ваш уникальный код для доступа к результатам:
+                        Ваши результаты отправлены на почту
                     </div>
-                    <strong id="clientCode"></strong>
-                    <div style="font-size: 0.9em; margin-top: 15px; opacity: 0.9;">
-                        ⚠️ Сохраните этот код! Он понадобится после прохождения программы для сравнения результатов.
-                    </div>
+                    <button id="downloadPdfBtn" style="margin-top: 25px; background: #7ba67d; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                        📄 Скачать результаты со сравнением в PDF
+                    </button>
                 </div>
                 <div class="message-box error-message" id="errorMessage">
                     ✗ Произошла ошибка при отправке. Пожалуйста, попробуйте ещё раз.
@@ -880,9 +871,9 @@
         });
 
         // Генерация уникального кода клиента
-        function generateClientCode(name, email) {
+        function generateClientCode(name, age) {
             const timestamp = Date.now();
-            const combined = `${name}_${email}_${timestamp}`;
+            const combined = `${name}_${age}_${timestamp}`;
             const hash = CryptoJS.MD5(combined).toString();
             return hash.substring(0, 8).toUpperCase();
         }
@@ -905,7 +896,7 @@
             const formData = new FormData(this);
             
             // Генерируем уникальный код
-            const clientCode = generateClientCode(formData.get('name'), formData.get('email'));
+            const clientCode = generateClientCode(formData.get('name'), formData.get('age'));
             
             // Собираем данные о симптомах
             let symptomsData = [];
@@ -959,8 +950,6 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Имя: ${formData.get('name')}
 Возраст: ${formData.get('age')} лет
-Email: ${formData.get('email')}
-Телефон: ${formData.get('phone') || 'не указан'}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 АНТРОПОМЕТРИЯ ДО:
@@ -1004,9 +993,7 @@ ${formData.get('comments') || 'нет'}
                 timestamp: new Date().toISOString(),
                 personalData: {
                     name: formData.get('name'),
-                    age: formData.get('age'),
-                    email: formData.get('email'),
-                    phone: formData.get('phone')
+                    age: formData.get('age')
                 },
                 measurements: {
                     weight: formData.get('weight'),
@@ -1032,18 +1019,16 @@ ${formData.get('comments') || 'нет'}
             // Отправка через EmailJS
             const templateParams = {
                 to_email: 'ol_zubova@mail.ru',
-                reply_to: formData.get('email'),
                 from_name: formData.get('name'),
                 client_code: clientCode,
                 subject: `[ПОСЛЕ ПРОГРАММЫ] ${formData.get('name')} (${clientCode})`,
                 message: fullMessage
             };
             
-            emailjs.send('service_9m21buc', 'template_c57zr5l', templateParams)
+            emailjs.send('service_9m21buc', 'template_cytb9gl', templateParams)
                 .then(function(response) {
                     console.log('SUCCESS!', response.status, response.text);
                     loader.classList.remove('show');
-                    document.getElementById('clientCode').textContent = clientCode;
                     successMessage.classList.add('show');
                     submitBtn.style.display = 'none';
                     successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1055,6 +1040,182 @@ ${formData.get('comments') || 'нет'}
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Отправить результаты';
                 });
+                
+            // Сохраняем данные для PDF
+            window.surveyDataAfterForPdf = {
+                clientCode,
+                formData,
+                symptomsData,
+                habitsData,
+                beforeData: savedData,
+                fullMessage
+            };
+        });
+        
+        // Функция генерации PDF со сравнением
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const data = window.surveyDataAfterForPdf;
+            
+            doc.setFont("helvetica");
+            
+            let y = 20;
+            const lineHeight = 7;
+            const margin = 20;
+            const maxWidth = 170;
+            
+            // Заголовок
+            doc.setFontSize(18);
+            doc.setTextColor(123, 166, 125);
+            doc.text("PLATYE MECHTY - REZULTATY", 105, y, { align: 'center' });
+            y += 10;
+            
+            doc.setFontSize(14);
+            doc.text("SRAVNENIE DO i POSLE", 105, y, { align: 'center' });
+            y += 15;
+            
+            // Функция добавления текста
+            function addText(text, fontSize = 10) {
+                doc.setFontSize(fontSize);
+                const lines = doc.splitTextToSize(text, maxWidth);
+                lines.forEach(line => {
+                    if (y > 270) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    doc.text(line, margin, y);
+                    y += lineHeight;
+                });
+            }
+            
+            // Имя
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            addText(`Imya: ${data.formData.get('name')}`);
+            addText(`Data: ${new Date().toLocaleString('ru-RU')}`);
+            y += 5;
+            
+            // Сравнение антропометрии
+            doc.setFontSize(12);
+            doc.setTextColor(123, 166, 125);
+            doc.text("SRAVNENIE ANTROPOMETRII", margin, y);
+            doc.setTextColor(0, 0, 0);
+            y += 8;
+            
+            const weightBefore = data.beforeData.measurements.weight || 0;
+            const weightAfter = data.formData.get('weight') || 0;
+            const weightDiff = (weightAfter - weightBefore).toFixed(1);
+            
+            addText(`Ves: ${weightBefore} kg -> ${weightAfter} kg (${weightDiff > 0 ? '+' : ''}${weightDiff} kg)`);
+            
+            if (data.beforeData.measurements.waist && data.formData.get('waist')) {
+                const waistDiff = (data.formData.get('waist') - data.beforeData.measurements.waist).toFixed(1);
+                addText(`Taliya: ${data.beforeData.measurements.waist} sm -> ${data.formData.get('waist')} sm (${waistDiff > 0 ? '+' : ''}${waistDiff} sm)`);
+            }
+            
+            if (data.beforeData.measurements.hips && data.formData.get('hips')) {
+                const hipsDiff = (data.formData.get('hips') - data.beforeData.measurements.hips).toFixed(1);
+                addText(`Bedra: ${data.beforeData.measurements.hips} sm -> ${data.formData.get('hips')} sm (${hipsDiff > 0 ? '+' : ''}${hipsDiff} sm)`);
+            }
+            y += 5;
+            
+            // Симптомы
+            doc.setFontSize(12);
+            doc.setTextColor(123, 166, 125);
+            doc.text("SIMPTOMY", margin, y);
+            doc.setTextColor(0, 0, 0);
+            y += 8;
+            
+            // Создаём карту симптомов ДО
+            const symptomsBeforeMap = {};
+            if (data.beforeData.symptoms) {
+                data.beforeData.symptoms.forEach(s => {
+                    symptomsBeforeMap[s.symptom] = s.intensity;
+                });
+            }
+            
+            // Сравнение симптомов
+            const improved = [];
+            const unchanged = [];
+            const worsened = [];
+            const disappeared = [];
+            
+            // Проверяем симптомы ДО
+            Object.keys(symptomsBeforeMap).forEach(symptom => {
+                const beforeIntensity = symptomsBeforeMap[symptom];
+                const afterSymptom = data.symptomsData.find(s => s.symptom === symptom);
+                
+                if (!afterSymptom) {
+                    disappeared.push(`${symptom} (bylo ${beforeIntensity}/10)`);
+                } else if (afterSymptom.intensity < beforeIntensity) {
+                    improved.push(`${symptom}: ${beforeIntensity}/10 -> ${afterSymptom.intensity}/10`);
+                } else if (afterSymptom.intensity === beforeIntensity) {
+                    unchanged.push(`${symptom}: ${beforeIntensity}/10`);
+                } else {
+                    worsened.push(`${symptom}: ${beforeIntensity}/10 -> ${afterSymptom.intensity}/10`);
+                }
+            });
+            
+            if (disappeared.length > 0) {
+                addText("Ischezli:");
+                disappeared.forEach(s => addText(`  - ${s}`));
+            }
+            if (improved.length > 0) {
+                addText("Uluchshilis:");
+                improved.forEach(s => addText(`  - ${s}`));
+            }
+            if (unchanged.length > 0) {
+                addText("Bez izmenenij:");
+                unchanged.forEach(s => addText(`  - ${s}`));
+            }
+            y += 5;
+            
+            // Привычки
+            doc.setFontSize(12);
+            doc.setTextColor(123, 166, 125);
+            doc.text("NOVYE PRIVYCHKI", margin, y);
+            doc.setTextColor(0, 0, 0);
+            y += 8;
+            
+            const habitsBefore = data.beforeData.habits || [];
+            const newHabits = data.habitsData.filter(h => !habitsBefore.includes(h));
+            
+            if (newHabits.length > 0) {
+                newHabits.forEach((h, i) => addText(`${i + 1}. ${h}`));
+            } else {
+                addText("Net novyh privychek");
+            }
+            y += 5;
+            
+            // Оценка
+            doc.setFontSize(12);
+            doc.setTextColor(123, 166, 125);
+            doc.text("OBSHHAYA OCENKA", margin, y);
+            doc.setTextColor(0, 0, 0);
+            y += 8;
+            
+            const overallBefore = data.beforeData.goals?.overall || 0;
+            const overallAfter = data.formData.get('overall') || 0;
+            const improvement = overallAfter - overallBefore;
+            
+            addText(`DO: ${overallBefore}/10`);
+            addText(`POSLE: ${overallAfter}/10`);
+            addText(`Uluchshenie: ${improvement > 0 ? '+' : ''}${improvement} ballov`);
+            
+            // Футер
+            doc.setFontSize(8);
+            doc.setTextColor(150, 150, 150);
+            doc.text("Platye Mechty - Olga Zharkova", 105, 285, { align: 'center' });
+            
+            doc.save(`Platye_Mechty_SRAVNENIE_${data.clientCode}.pdf`);
+        }
+        
+        // Обработчик кнопки
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.id === 'downloadPdfBtn') {
+                generatePDF();
+            }
         });
     </script>
 </body>
