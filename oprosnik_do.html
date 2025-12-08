@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Опросник "Платье Мечты" - ДО прохождения программы</title>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+        // Инициализация EmailJS
+        (function(){
+            emailjs.init("3b2Yc9vU_OQG96Hcz");
+        })();
+    </script>
     <style>
         * {
             margin: 0;
@@ -538,11 +546,7 @@
                 <p>Сохраните его! Этот код понадобится для заполнения опросника после прохождения программы, чтобы система автоматически сравнила ваши результаты.</p>
             </div>
 
-            <form id="surveyForm" method="POST" action="https://formsubmit.co/ol_zubova@mail.ru">
-                <!-- Скрытые поля для настройки FormSubmit -->
-                <input type="hidden" name="_captcha" value="false">
-                <input type="hidden" name="_template" value="table">
-                
+            <form id="surveyForm">
                 <!-- Личные данные -->
                 <div class="section">
                     <h2 class="section-title">Личные данные</h2>
@@ -956,36 +960,36 @@ ${formData.get('comments') || 'нет'}
             
             localStorage.setItem(`survey_before_${clientCode}`, JSON.stringify(surveyData));
             
-            // Добавляем скрытые поля для отправки
-            const hiddenFields = {
-                '_subject': `[ДО ПРОГРАММЫ] ${formData.get('name')} (${clientCode})`,
-                '_cc': formData.get('email'),
-                'client_code': clientCode,
-                'message': fullMessage
+            // Отправка через EmailJS
+            const templateParams = {
+                to_email: 'ol_zubova@mail.ru',
+                reply_to: formData.get('email'),
+                from_name: formData.get('name'),
+                client_code: clientCode,
+                subject: `[ДО ПРОГРАММЫ] ${formData.get('name')} (${clientCode})`,
+                message: fullMessage
             };
             
-            Object.keys(hiddenFields).forEach(key => {
-                let input = document.querySelector(`input[name="${key}"]`);
-                if (!input) {
-                    input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = key;
-                    this.appendChild(input);
-                }
-                input.value = hiddenFields[key];
-            });
-            
-            // Показываем код клиенту
-            document.getElementById('clientCode').textContent = clientCode;
-            document.getElementById('successMessage').classList.add('show');
-            loader.classList.remove('show');
-            submitBtn.style.display = 'none';
-            document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // Отправляем форму через 2 секунды (чтобы клиент увидел код)
-            setTimeout(() => {
-                this.submit();
-            }, 2000);
+            emailjs.send('service_9m21buc', 'template_c57zr5l', templateParams)
+                .then(function(response) {
+                    console.log('SUCCESS!', response.status, response.text);
+                    
+                    // Показываем код клиенту
+                    document.getElementById('clientCode').textContent = clientCode;
+                    document.getElementById('successMessage').classList.add('show');
+                    loader.classList.remove('show');
+                    submitBtn.style.display = 'none';
+                    document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, function(error) {
+                    console.error('FAILED...', error);
+                    
+                    // Показываем ошибку
+                    loader.classList.remove('show');
+                    document.getElementById('errorMessage').textContent = 'Ошибка отправки. Попробуйте ещё раз или свяжитесь с Ольгой Жарковой.';
+                    document.getElementById('errorMessage').classList.add('show');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Отправить результаты';
+                });
         });
     </script>
 </body>

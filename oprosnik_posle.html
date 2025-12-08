@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Опросник "Платье Мечты" - ПОСЛЕ прохождения программы</title>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+        // Инициализация EmailJS
+        (function(){
+            emailjs.init("3b2Yc9vU_OQG96Hcz");
+        })();
+    </script>
     <style>
         * {
             margin: 0;
@@ -547,11 +555,7 @@
                 </div>
             </div>
 
-            <form id="surveyForm" method="POST" action="https://formsubmit.co/ol_zubova@mail.ru">
-                <!-- Скрытые поля для настройки FormSubmit -->
-                <input type="hidden" name="_captcha" value="false">
-                <input type="hidden" name="_template" value="table">
-                
+            <form id="surveyForm">
                 <!-- Личные данные -->
                 <div class="section">
                     <h2 class="section-title">Личные данные</h2>
@@ -1025,44 +1029,32 @@ ${formData.get('comments') || 'нет'}
             
             localStorage.setItem(`survey_before_${clientCode}`, JSON.stringify(surveyData));
             
-            // Отправка через FormSubmit
-            fetch('https://formsubmit.co/ajax/ol_zubova@mail.ru', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    _subject: `[ПОСЛЕ ПРОХОЖДЕНИЯ ПРОГРАММЫ] Опросник "Платье Мечты" - ${formData.get('name')} (${clientCode})`,
-                    _cc: formData.get('email'),
-                    _template: 'box',
-                    message: fullMessage,
-                    client_code: clientCode,
-                    name: formData.get('name'),
-                    email: formData.get('email')
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                loader.classList.remove('show');
-                if (data.success || true) { // Временно всегда показываем успех
+            // Отправка через EmailJS
+            const templateParams = {
+                to_email: 'ol_zubova@mail.ru',
+                reply_to: formData.get('email'),
+                from_name: formData.get('name'),
+                client_code: clientCode,
+                subject: `[ПОСЛЕ ПРОГРАММЫ] ${formData.get('name')} (${clientCode})`,
+                message: fullMessage
+            };
+            
+            emailjs.send('service_9m21buc', 'template_c57zr5l', templateParams)
+                .then(function(response) {
+                    console.log('SUCCESS!', response.status, response.text);
+                    loader.classList.remove('show');
                     document.getElementById('clientCode').textContent = clientCode;
                     successMessage.classList.add('show');
                     submitBtn.style.display = 'none';
                     successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                } else {
-                    throw new Error('Ошибка отправки');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                // Даже при ошибке показываем успех, так как данные сохранены локально
-                loader.classList.remove('show');
-                document.getElementById('clientCode').textContent = clientCode;
-                successMessage.classList.add('show');
-                submitBtn.style.display = 'none';
-                successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            });
+                }, function(error) {
+                    console.error('FAILED...', error);
+                    loader.classList.remove('show');
+                    errorMessage.textContent = 'Ошибка отправки. Данные сохранены локально. Свяжитесь с Ольгой Жарковой.';
+                    errorMessage.classList.add('show');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Отправить результаты';
+                });
         });
     </script>
 </body>
