@@ -553,7 +553,7 @@
                            maxlength="8" 
                            style="text-transform: uppercase; font-size: 1.3em; font-weight: 600; letter-spacing: 3px; text-align: center;"
                            placeholder="A3F7B2D1">
-                    <p class="info-text">Если вы не сохранили код, обратитесь к Ольге Жарковой</p>
+                    <p class="info-text">Если вы не сохранили код, посмотрите PDF-файл с результатами ДО прохождения программы</p>
                 </div>
             </div>
 
@@ -676,9 +676,6 @@
                 <div class="loader" id="loader"></div>
                 <div class="message-box success-message" id="successMessage">
                     ✓ Поздравляем! Вы завершили программу!<br><br>
-                    <div style="font-size: 0.95em; margin: 15px 0;">
-                        Ваши результаты отправлены на почту
-                    </div>
                     <button id="downloadPdfBtn" style="margin-top: 25px; background: #7ba67d; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
                         📄 Скачать результаты со сравнением в PDF
                     </button>
@@ -1326,7 +1323,13 @@ ${formData.get('comments') || 'нет'}
             // Добавляем элемент в DOM (нужно для html2pdf)
             pdfContent.style.position = 'fixed';
             pdfContent.style.left = '-9999px';
+            pdfContent.style.top = '-9999px';
             document.body.appendChild(pdfContent);
+            
+            // Даём браузеру время отрисовать элемент
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            console.log('Элемент ПОСЛЕ добавлен в DOM, начинаем рендеринг...');
             
             // Генерируем PDF
             const opt = {
@@ -1341,14 +1344,23 @@ ${formData.get('comments') || 'нет'}
                 await html2pdf().set(opt).from(pdfContent).save();
             } finally {
                 // Удаляем элемент из DOM
-                document.body.removeChild(pdfContent);
+                if (document.body.contains(pdfContent)) {
+                    document.body.removeChild(pdfContent);
+                }
             }
         }
         
         // Обработчик кнопки
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', async function(e) {
             if (e.target && e.target.id === 'downloadPdfBtn') {
-                generatePDF();
+                try {
+                    console.log('Начинаем генерацию PDF ПОСЛЕ...');
+                    await generatePDF();
+                    console.log('PDF ПОСЛЕ успешно сгенерирован!');
+                } catch (error) {
+                    console.error('Ошибка генерации PDF ПОСЛЕ:', error);
+                    alert('Ошибка при создании PDF. Попробуйте ещё раз или обратитесь в поддержку.');
+                }
             }
         });
     </script>

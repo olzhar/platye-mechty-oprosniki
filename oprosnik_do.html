@@ -1100,7 +1100,13 @@ ${formData.get('comments') || 'нет'}
             // Добавляем элемент в DOM (нужно для html2pdf)
             pdfContent.style.position = 'fixed';
             pdfContent.style.left = '-9999px';
+            pdfContent.style.top = '-9999px';
             document.body.appendChild(pdfContent);
+            
+            // Даём браузеру время отрисовать элемент
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            console.log('Элемент добавлен в DOM, начинаем рендеринг...');
             
             // Генерируем PDF из HTML
             const opt = {
@@ -1115,14 +1121,23 @@ ${formData.get('comments') || 'нет'}
                 await html2pdf().set(opt).from(pdfContent).save();
             } finally {
                 // Удаляем элемент из DOM
-                document.body.removeChild(pdfContent);
+                if (document.body.contains(pdfContent)) {
+                    document.body.removeChild(pdfContent);
+                }
             }
         }
         
         // Обработчик кнопки скачивания PDF
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', async function(e) {
             if (e.target && e.target.id === 'downloadPdfBtn') {
-                generatePDF();
+                try {
+                    console.log('Начинаем генерацию PDF...');
+                    await generatePDF();
+                    console.log('PDF успешно сгенерирован!');
+                } catch (error) {
+                    console.error('Ошибка генерации PDF:', error);
+                    alert('Ошибка при создании PDF. Попробуйте ещё раз или обратитесь в поддержку.');
+                }
             }
         });
     </script>
