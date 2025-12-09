@@ -7,6 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         // Инициализация EmailJS
         (function(){
@@ -1261,333 +1263,234 @@ ${formData.get('improve_program') || 'не указано'}
         // Функция генерации PDF со сравнением
         
         // Функция генерации PDF со сравнением через печать
-        function generatePDF() {
-            const data = window.surveyDataAfterForPdf;
-            const beforeData = data.beforeData;
+        async function generatePDF() {
+            const data = window.surveyDataForPdf;
+            const { jsPDF } = window.jspdf;
             
-            // Вычисляем изменения
-            const weightBefore = beforeData.measurements.weight || 0;
-            const weightAfter = parseFloat(data.formData.get('weight')) || 0;
-            const weightDiff = (weightAfter - weightBefore).toFixed(1);
+            // Показываем загрузку
+            const loader = document.createElement('div');
+            loader.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 10000; text-align: center;';
+            loader.innerHTML = '<div style="font-size: 18px; color: #7ba67d; margin-bottom: 15px;">📄 Создаём ваш PDF...</div><div style="width: 40px; height: 40px; margin: 0 auto; border: 4px solid #f3f3f3; border-top: 4px solid #7ba67d; border-radius: 50%; animation: spin 1s linear infinite;"></div><style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>';
+            document.body.appendChild(loader);
             
-            const waistBefore = beforeData.measurements.waist || 0;
-            const waistAfter = parseFloat(data.formData.get('waist')) || 0;
-            const waistDiff = waistAfter ? (waistAfter - waistBefore).toFixed(1) : null;
-            
-            const hipsBefore = beforeData.measurements.hips || 0;
-            const hipsAfter = parseFloat(data.formData.get('hips')) || 0;
-            const hipsDiff = hipsAfter ? (hipsAfter - hipsBefore).toFixed(1) : null;
-            
-            const overallBefore = beforeData.goals?.overall || 0;
-            const overallAfter = parseInt(data.formData.get('overall')) || 0;
-            const overallDiff = overallAfter - overallBefore;
-            
-            // Анализ симптомов
-            const symptomsBefore = beforeData.symptoms || [];
-            const symptomsAfter = data.symptomsData || [];
-            
-            const disappeared = [];
-            const decreased = [];
-            const unchanged = [];
-            
-            symptomsBefore.forEach(s => {
-                const afterSymptom = symptomsAfter.find(sa => sa.symptom === s.symptom);
-                if (!afterSymptom) {
-                    disappeared.push({ symptom: s.symptom, before: s.intensity });
-                } else if (afterSymptom.intensity < s.intensity) {
-                    decreased.push({ symptom: s.symptom, before: s.intensity, after: afterSymptom.intensity });
-                } else {
-                    unchanged.push({ symptom: s.symptom, intensity: afterSymptom.intensity });
+            try {
+                const container = document.createElement('div');
+                container.style.cssText = 'position: absolute; left: -9999px; width: 800px; background: white; padding: 40px; font-family: Arial, sans-serif;';
+                
+                // Формируем HTML для сравнения антропометрии
+                const weightDiff = (data.measurements.after.weight - data.measurements.before.weight).toFixed(1);
+                const waistDiff = data.measurements.after.waist ? (data.measurements.after.waist - data.measurements.before.waist).toFixed(1) : null;
+                const hipsDiff = data.measurements.after.hips ? (data.measurements.after.hips - data.measurements.before.hips).toFixed(1) : null;
+                const chestDiff = data.measurements.after.chest ? (data.measurements.after.chest - data.measurements.before.chest).toFixed(1) : null;
+                
+                function getDiffColor(diff) {
+                    if (!diff) return '#999';
+                    return parseFloat(diff) < 0 ? '#4caf50' : parseFloat(diff) > 0 ? '#f44336' : '#999';
                 }
-            });
-            
-            // Новые привычки
-            const habitsBefore = beforeData.habits || [];
-            const habitsAfter = data.habitsData || [];
-            const newHabits = habitsAfter.filter(h => !habitsBefore.includes(h));
-            
-            // Создаём HTML для печати
-            const printContent = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Платье Мечты - Результаты ПОСЛЕ</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style>
-        @media print {
-            @page { margin: 0; }
-            body { 
-                margin: 0; 
-                padding: 0;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            .header, .congrats-box, .cta-box, .channel-box {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-        }
-        body {
-            font-family: 'Montserrat', Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: white;
-        }
-        .header {
-            background: linear-gradient(135deg, #7ba67d 0%, #5a9f5d 100%);
-            padding: 30px;
-            text-align: center;
-            color: white;
-            margin: -20px -20px 20px -20px;
-        }
-        .congrats-box {
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            text-align: center;
-        }
-        .comparison-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
-            text-align: center;
-            margin-bottom: 8px;
-        }
-        .comparison-row {
-            background: #f1f8f1;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            border-left: 3px solid #7ba67d;
-        }
-        .green-badge {
-            background: #7ba67d;
-            color: white;
-            padding: 10px;
-            border-radius: 6px;
-            text-align: center;
-            font-weight: bold;
-        }
-        .channel-box {
-            background: #e8f5e9;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            border-left: 4px solid #7ba67d;
-        }
-        .cta-box {
-            background: linear-gradient(135deg, #f5e6d3 0%, #fdf8f0 100%);
-            padding: 25px;
-            border-radius: 12px;
-            border: 2px solid #d4af7a;
-            margin-top: 20px;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1 style="margin: 0; font-size: 28px; font-weight: 300; letter-spacing: 3px;">ПЛАТЬЕ МЕЧТЫ</h1>
-        <p style="margin: 10px 0 0 0; font-size: 16px; font-weight: 500;">🎉 ПОЗДРАВЛЯЕМ! 🎉</p>
-        <p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.95;">Результаты ПОСЛЕ программы</p>
-    </div>
-    
-    <div class="congrats-box">
-        <div style="font-weight: bold; color: #2c2c2c; font-size: 14px; padding: 10px 0;">${data.formData.get('name')}, вы завершили программу!</div>
-    </div>
-    
-    <div style="margin: 25px 0;">
-        <h2 style="color: #7ba67d; font-size: 14px; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; margin-bottom: 12px;">
-            📊 СРАВНЕНИЕ АНТРОПОМЕТРИИ
-        </h2>
-        <div class="comparison-grid" style="font-weight: bold; color: #6b6b6b; font-size: 9px;">
-            <div>ДО</div>
-            <div>ПОСЛЕ</div>
-            <div>ИЗМЕНЕНИЕ</div>
-        </div>
-        
-        <div class="comparison-row">
-            <div style="font-size: 10px; color: #6b6b6b; margin-bottom: 5px;">ВЕС</div>
-            <div class="comparison-grid" style="font-size: 12px; font-weight: bold;">
-                <div>${weightBefore} кг</div>
-                <div style="color: #7ba67d;">${weightAfter} кг</div>
-                <div style="color: ${weightDiff < 0 ? '#7ba67d' : '#c1272d'};">
-                    ${weightDiff > 0 ? '+' : ''}${weightDiff} кг
-                </div>
-            </div>
-        </div>
-        
-        ${waistDiff ? `
-        <div class="comparison-row">
-            <div style="font-size: 10px; color: #6b6b6b; margin-bottom: 5px;">ТАЛИЯ</div>
-            <div class="comparison-grid" style="font-size: 12px; font-weight: bold;">
-                <div>${waistBefore} см</div>
-                <div style="color: #7ba67d;">${waistAfter} см</div>
-                <div style="color: ${waistDiff < 0 ? '#7ba67d' : '#c1272d'};">
-                    ${waistDiff > 0 ? '+' : ''}${waistDiff} см
-                </div>
-            </div>
-        </div>` : ''}
-        
-        ${hipsDiff ? `
-        <div class="comparison-row">
-            <div style="font-size: 10px; color: #6b6b6b; margin-bottom: 5px;">БЁДРА</div>
-            <div class="comparison-grid" style="font-size: 12px; font-weight: bold;">
-                <div>${hipsBefore} см</div>
-                <div style="color: #7ba67d;">${hipsAfter} см</div>
-                <div style="color: ${hipsDiff < 0 ? '#7ba67d' : '#c1272d'};">
-                    ${hipsDiff > 0 ? '+' : ''}${hipsDiff} см
-                </div>
-            </div>
-        </div>` : ''}
-    </div>
-    
-    <div style="margin: 25px 0;">
-        <h2 style="color: #7ba67d; font-size: 14px; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; margin-bottom: 12px;">
-            🩺 ДИНАМИКА СИМПТОМОВ
-        </h2>
-        
-        ${disappeared.length > 0 ? `
-            <div style="margin-bottom: 15px;">
-                <div style="color: #7ba67d; font-weight: bold; font-size: 11px; margin-bottom: 8px;">✅ ИСЧЕЗЛИ:</div>
-                ${disappeared.map(s => `
-                    <div style="background: #e8f5e9; padding: 8px; margin-bottom: 4px; border-radius: 4px; font-size: 10px; border-left: 3px solid #7ba67d;">
-                        ${s.symptom} <span style="color: #6b6b6b;">(было ${s.before}/10)</span>
+                
+                function getDiffIcon(diff) {
+                    if (!diff) return '';
+                    return parseFloat(diff) < 0 ? '✅' : parseFloat(diff) > 0 ? '⚠️' : '→';
+                }
+                
+                // Симптомы
+                let symptomsHtml = '';
+                if (data.symptomsAnalysis) {
+                    symptomsHtml = '<div style="margin: 25px 0;"><h3 style="font-size: 18px; color: #7ba67d; margin-bottom: 15px;">🩺 ДИНАМИКА СИМПТОМОВ</h3>';
+                    
+                    if (data.symptomsAnalysis.disappeared.length > 0) {
+                        symptomsHtml += '<div style="background: #e8f5e9; padding: 12px; margin: 8px 0; border-radius: 8px; border-left: 4px solid #4caf50;"><strong style="color: #2e7d32; font-size: 15px;">✅ ИСЧЕЗЛИ:</strong>';
+                        data.symptomsAnalysis.disappeared.forEach(s => {
+                            symptomsHtml += `<div style="margin-top: 8px; font-size: 14px;">• ${s.symptom} (было ${s.before}/10)</div>`;
+                        });
+                        symptomsHtml += '</div>';
+                    }
+                    
+                    if (data.symptomsAnalysis.decreased.length > 0) {
+                        symptomsHtml += '<div style="background: #fff3e0; padding: 12px; margin: 8px 0; border-radius: 8px; border-left: 4px solid #ff9800;"><strong style="color: #e65100; font-size: 15px;">↓ УМЕНЬШИЛИСЬ:</strong>';
+                        data.symptomsAnalysis.decreased.forEach(s => {
+                            symptomsHtml += `<div style="margin-top: 8px; font-size: 14px;">• ${s.symptom}: ${s.before}/10 → ${s.after}/10</div>`;
+                        });
+                        symptomsHtml += '</div>';
+                    }
+                    
+                    symptomsHtml += '</div>';
+                }
+                
+                // Привычки
+                let habitsHtml = '';
+                if (data.habitsAnalysis) {
+                    habitsHtml = '<div style="margin: 25px 0;"><h3 style="font-size: 18px; color: #7ba67d; margin-bottom: 15px;">✨ ПРИВЫЧКИ</h3>';
+                    
+                    if (data.habitsAnalysis.formed.length > 0) {
+                        habitsHtml += '<div style="background: #e8f5e9; padding: 12px; margin: 8px 0; border-radius: 8px;"><strong style="color: #2e7d32; font-size: 15px;">✅ СФОРМИРОВАНЫ:</strong>';
+                        data.habitsAnalysis.formed.forEach((h, i) => {
+                            habitsHtml += `<div style="margin-top: 6px; font-size: 14px;">${i + 1}. ${h}</div>`;
+                        });
+                        habitsHtml += '</div>';
+                    }
+                    
+                    if (data.habitsAnalysis.other.length > 0) {
+                        habitsHtml += '<div style="background: #f3e5f5; padding: 12px; margin: 8px 0; border-radius: 8px;"><strong style="color: #7b1fa2; font-size: 15px;">💫 ДРУГИЕ НОВЫЕ:</strong>';
+                        data.habitsAnalysis.other.forEach((h, i) => {
+                            habitsHtml += `<div style="margin-top: 6px; font-size: 14px;">${i + 1}. ${h}</div>`;
+                        });
+                        habitsHtml += '</div>';
+                    }
+                    
+                    habitsHtml += '</div>';
+                }
+                
+                container.innerHTML = `
+                    <div style="background: linear-gradient(135deg, #7ba67d 0%, #5a8c5e 100%); padding: 30px; text-align: center; color: white; border-radius: 15px; margin-bottom: 30px;">
+                        <h1 style="margin: 0; font-size: 32px; letter-spacing: 3px; font-weight: 300;">ПЛАТЬЕ МЕЧТЫ</h1>
+                        <p style="margin: 10px 0 0 0; font-size: 16px;">Результаты ПОСЛЕ программы</p>
                     </div>
-                `).join('')}
-            </div>
-        ` : ''}
-        
-        ${decreased.length > 0 ? `
-            <div style="margin-bottom: 15px;">
-                <div style="color: #ffc107; font-weight: bold; font-size: 11px; margin-bottom: 8px;">↓ УМЕНЬШИЛИСЬ:</div>
-                ${decreased.map(s => `
-                    <div style="background: #fff9e6; padding: 8px; margin-bottom: 4px; border-radius: 4px; font-size: 10px; border-left: 3px solid #ffc107;">
-                        ${s.symptom}: ${s.before}/10 → ${s.after}/10
+                    
+                    <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 25px; border-radius: 12px; border: 3px solid #7ba67d; margin-bottom: 30px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; color: #2e7d32; margin-bottom: 15px;">🎉 ПОЗДРАВЛЯЕМ, ${data.name.toUpperCase()}!</div>
+                        <div style="font-size: 14px; color: #555;">Вы завершили программу "Платье Мечты"</div>
+                        <div style="font-size: 12px; color: #999; margin-top: 10px;">Код: ${data.clientCode} | Дата: ${new Date().toLocaleDateString('ru-RU')}</div>
                     </div>
-                `).join('')}
-            </div>
-        ` : ''}
-    </div>
-    
-    ${newHabits.length > 0 ? `
-    <div style="margin: 25px 0;">
-        <h2 style="color: #7ba67d; font-size: 14px; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; margin-bottom: 12px;">
-            ✨ НОВЫЕ ПРИВЫЧКИ
-        </h2>
-        ${newHabits.map((h, i) => `
-            <div style="padding: 5px 0; font-size: 10px;">
-                <span style="color: #7ba67d; font-weight: bold;">✓</span> ${i + 1}. ${h}
-            </div>
-        `).join('')}
-    </div>
-    ` : ''}
-    
-    <div style="margin: 25px 0; text-align: center;">
-        <h2 style="color: #7ba67d; font-size: 14px; margin-bottom: 15px;">⭐ ОБЩАЯ ОЦЕНКА</h2>
-        <div style="display: flex; justify-content: center; align-items: center; gap: 20px;">
-            <div>
-                <div style="color: #6b6b6b; font-size: 9px; margin-bottom: 5px;">ДО</div>
-                <div style="display: inline-block; background: #c17b6f; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold;">
-                    ${overallBefore}
-                </div>
-            </div>
-            <div style="font-size: 24px; color: #7ba67d;">→</div>
-            <div>
-                <div style="color: #6b6b6b; font-size: 9px; margin-bottom: 5px;">ПОСЛЕ</div>
-                <div style="display: inline-block; background: #7ba67d; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold;">
-                    ${overallAfter}
-                </div>
-            </div>
-        </div>
-        <div style="margin-top: 15px; color: #7ba67d; font-size: 13px; font-weight: bold;">
-            Улучшение на ${overallDiff > 0 ? '+' : ''}${overallDiff} ${overallDiff === 1 ? 'балл' : overallDiff < 5 ? 'балла' : 'баллов'}! 🎉
-        </div>
-    </div>
-    
-    <div class="cta-box">
-        <div style="text-align: center; font-size: 20px; color: #d4af7a; margin-bottom: 15px;">
-            ✨ КАКАЯ ВЫ УМНИЦА!
-        </div>
-        
-        <div style="font-size: 11px; line-height: 1.8; color: #2c2c2c; margin-bottom: 15px;">
-            <p style="margin: 0 0 10px 0;">Вы заложили основы преображения... Новая реальность – следствие новой личности...</p>
-            
-            <p style="margin: 0 0 15px 0;"><strong>Готовы продолжить путь к Новой Я?</strong></p>
-        </div>
-        
-        <div style="font-size: 10px; line-height: 1.6; color: #2c2c2c; margin-bottom: 15px;">
-            <div style="margin-bottom: 8px;">
-                <span style="color: #d4af7a; font-size: 14px;">💫</span> 
-                <strong>Питание</strong> – вкусно и полезно
-            </div>
-            <div style="margin-bottom: 8px;">
-                <span style="color: #d4af7a; font-size: 14px;">💫</span> 
-                <strong>Оздоровление</strong> – индивидуальная программа
-            </div>
-            <div style="margin-bottom: 8px;">
-                <span style="color: #d4af7a; font-size: 14px;">💫</span> 
-                <strong>Психика</strong> – работа с установками и образом себя
-            </div>
-        </div>
-        
-        <div style="font-size: 11px; line-height: 1.8; color: #2c2c2c; margin-bottom: 15px;">
-            <p style="margin: 0 0 10px 0;">В результате нашей совместной работы меняется не только тело и мышление, но и вся жизнь.</p>
-            
-            <p class="green-badge" style="margin: 0; font-size: 11px;">
-                Для вас скидка 20% на консультацию
-            </p>
-        </div>
-        
-        <div class="channel-box">
-            <div style="font-size: 12px; color: #7ba67d; font-weight: bold; margin-bottom: 8px; text-align: center;">
-                📢 Присоединяйтесь к моему Telegram-каналу!
-            </div>
-            <div style="font-size: 11px; color: #2c2c2c; text-align: center; margin-bottom: 8px;">
-                <strong>"Путь к здоровью и призванию"</strong>
-            </div>
-            <div style="font-size: 10px; text-align: center; margin-bottom: 10px;">
-                <a href="https://t.me/izdorovi" target="_blank" style="color: #7ba67d; text-decoration: none; font-weight: bold;">t.me/izdorovi</a>
-            </div>
-            <div style="font-size: 9px; color: #6b6b6b; text-align: center; line-height: 1.5;">
-                О питании, здоровье и психологии для женщин
-            </div>
-        </div>
-        
-        <div style="border-top: 2px solid #d4af7a; padding-top: 15px; margin-top: 15px; text-align: center;">
-            <div style="font-size: 11px; color: #7ba67d; font-weight: bold; margin-bottom: 10px;">
-                С любовью и верой в вас! 💚
-            </div>
-            
-            <div style="font-size: 12px; color: #d4af7a; font-weight: bold; margin-bottom: 8px;">
-                ПЛАТЬЕ МЕЧТЫ 👗
-            </div>
-            <div style="font-size: 11px; color: #2c2c2c; font-weight: bold; margin-bottom: 8px;">
-                Ольга Жаркова
-            </div>
-            <div style="font-size: 10px; color: #6b6b6b; margin-bottom: 3px;">
-                Нутрициолог-психолог
-            </div>
-            <div style="font-size: 10px; color: #2c2c2c; margin-bottom: 3px;">
-                📞 +7-903-756-22-33
-            </div>
-            <div style="font-size: 10px; margin-top: 5px;">
-                📱 <a href="https://t.me/olga_zharkova_health" target="_blank" style="color: #2c2c2c; text-decoration: none;">t.me/olga_zharkova_health</a>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
-            `;
-            
-            // Открываем новое окно
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(printContent);
-            printWindow.document.close();
-            
-            // Ждём загрузки и открываем диалог печати
-            printWindow.onload = function() {
+                    
+                    <div style="margin: 25px 0;">
+                        <h3 style="font-size: 18px; color: #7ba67d; margin-bottom: 15px;">📊 СРАВНЕНИЕ АНТРОПОМЕТРИИ</h3>
+                        
+                        <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 12px;">
+                            <div style="font-size: 15px; margin-bottom: 8px;"><strong>ВЕС:</strong></div>
+                            <div style="font-size: 14px; line-height: 1.6;">
+                                ДО: ${data.measurements.before.weight} кг →
+                                ПОСЛЕ: ${data.measurements.after.weight} кг →
+                                <span style="color: ${getDiffColor(weightDiff)}; font-weight: bold;">
+                                    ${weightDiff > 0 ? '+' : ''}${weightDiff} кг ${getDiffIcon(weightDiff)}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        ${waistDiff ? `<div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 12px;">
+                            <div style="font-size: 15px; margin-bottom: 8px;"><strong>ТАЛИЯ:</strong></div>
+                            <div style="font-size: 14px; line-height: 1.6;">
+                                ДО: ${data.measurements.before.waist} см →
+                                ПОСЛЕ: ${data.measurements.after.waist} см →
+                                <span style="color: ${getDiffColor(waistDiff)}; font-weight: bold;">
+                                    ${waistDiff > 0 ? '+' : ''}${waistDiff} см ${getDiffIcon(waistDiff)}
+                                </span>
+                            </div>
+                        </div>` : ''}
+                        
+                        ${hipsDiff ? `<div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 12px;">
+                            <div style="font-size: 15px; margin-bottom: 8px;"><strong>БЁДРА:</strong></div>
+                            <div style="font-size: 14px; line-height: 1.6;">
+                                ДО: ${data.measurements.before.hips} см →
+                                ПОСЛЕ: ${data.measurements.after.hips} см →
+                                <span style="color: ${getDiffColor(hipsDiff)}; font-weight: bold;">
+                                    ${hipsDiff > 0 ? '+' : ''}${hipsDiff} см ${getDiffIcon(hipsDiff)}
+                                </span>
+                            </div>
+                        </div>` : ''}
+                        
+                        ${chestDiff ? `<div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 12px;">
+                            <div style="font-size: 15px; margin-bottom: 8px;"><strong>ГРУДЬ:</strong></div>
+                            <div style="font-size: 14px; line-height: 1.6;">
+                                ДО: ${data.measurements.before.chest} см →
+                                ПОСЛЕ: ${data.measurements.after.chest} см →
+                                <span style="color: ${getDiffColor(chestDiff)}; font-weight: bold;">
+                                    ${chestDiff > 0 ? '+' : ''}${chestDiff} см ${getDiffIcon(chestDiff)}
+                                </span>
+                            </div>
+                        </div>` : ''}
+                    </div>
+                    
+                    ${symptomsHtml}
+                    ${habitsHtml}
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <h3 style="font-size: 18px; color: #7ba67d; margin-bottom: 15px;">⭐ ОБЩАЯ ОЦЕНКА</h3>
+                        <div style="display: inline-flex; align-items: center; gap: 20px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 12px; color: #999; margin-bottom: 5px;">ДО</div>
+                                <div style="display: inline-block; background: #e0e0e0; color: #666; padding: 15px 30px; border-radius: 50px; font-size: 28px; font-weight: bold;">
+                                    ${data.ratings.before}<span style="font-size: 18px;">/10</span>
+                                </div>
+                            </div>
+                            <div style="font-size: 32px; color: #7ba67d;">→</div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 12px; color: #999; margin-bottom: 5px;">ПОСЛЕ</div>
+                                <div style="display: inline-block; background: linear-gradient(135deg, #7ba67d 0%, #4caf50 100%); color: white; padding: 15px 30px; border-radius: 50px; font-size: 28px; font-weight: bold;">
+                                    ${data.ratings.after}<span style="font-size: 18px;">/10</span>
+                                </div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 28px; color: #4caf50; font-weight: bold;">
+                                    +${data.ratings.after - data.ratings.before} 🎉
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #fff9e6; padding: 20px; border-radius: 12px; border: 2px solid #ffd54f; margin: 25px 0; text-align: center;">
+                        <div style="font-size: 18px; font-weight: bold; color: #f57c00; margin-bottom: 12px;">✨ КАКАЯ ВЫ УМНИЦА!</div>
+                        <div style="font-size: 14px; line-height: 1.7; color: #555;">
+                            Вы заложили основы преображения. Новое развитие - создание новой личности!
+                        </div>
+                        <div style="margin-top: 15px; font-size: 13px; color: #666;">
+                            В результате нашей совместной работы меняется не только тело и мышление, но и вся жизнь.
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e0e0e0; font-size: 13px; color: #666;">
+                        <div style="font-weight: bold; color: #7ba67d; margin-bottom: 5px;">ПЛАТЬЕ МЕЧТЫ 👗</div>
+                        <div style="font-weight: bold; margin-bottom: 3px;">Ольга Жаркова</div>
+                        <div style="font-size: 11px; margin-bottom: 8px;">Нутрициолог-психолог</div>
+                        <div style="font-size: 12px;">📱 t.me/olga_zharkova_health</div>
+                    </div>
+                `;
+                
+                document.body.appendChild(container);
+                
+                // Захватываем содержимое с помощью html2canvas
+                const canvas = await html2canvas(container, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff'
+                });
+                
+                // Создаём PDF
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+                
+                const imgWidth = 210;
+                const pageHeight = 297;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+                
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                pdf.save(`Платье_Мечты_ПОСЛЕ_${data.clientCode}.pdf`);
+                
+                document.body.removeChild(container);
+                document.body.removeChild(loader);
+                
+            } catch (error) {
+                console.error('Ошибка создания PDF:', error);
+                document.body.removeChild(loader);
+                alert('Ошибка при создании PDF. Попробуйте ещё раз или обратитесь в поддержку.');
+            }
+        }
                 setTimeout(() => {
                     printWindow.print();
                 }, 250);
