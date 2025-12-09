@@ -891,161 +891,297 @@
             
             const formData = new FormData(this);
             
-            // Генерируем уникальный код
-            const clientCode = generateClientCode(formData.get('name'), formData.get('age'));
+            // ВАЖНО: Берём код из поля ввода, а НЕ генерируем новый!
+            const clientCode = document.getElementById('clientCode').value.toUpperCase().trim();
             
-            // Собираем данные о симптомах
-            let symptomsData = [];
+            // Загружаем данные ДО из localStorage
+            const savedData = localStorage.getItem(`survey_before_${clientCode}`);
+            if (!savedData) {
+                errorMessage.textContent = '❌ Данные ДО не найдены. Проверьте код клиента.';
+                errorMessage.classList.add('show');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Отправить результаты';
+                loader.classList.remove('show');
+                return;
+            }
+            
+            const beforeData = JSON.parse(savedData);
+            
+            // Собираем данные о симптомах ПОСЛЕ
+            let symptomsAfter = [];
             document.querySelectorAll('.symptom-answer').forEach(input => {
                 if (input.value === 'yes') {
                     const symptomIndex = input.dataset.symptom;
                     const symptomItem = input.dataset.text;
                     const intensity = document.querySelector(`.symptom-slider[data-symptom="${symptomIndex}"]`).value;
-                    symptomsData.push({
+                    symptomsAfter.push({
                         symptom: symptomItem,
                         intensity: parseInt(intensity)
                     });
                 }
             });
             
-            // Собираем данные о привычках
-            let habitsData = [];
+            // Собираем данные о привычках ПОСЛЕ
+            let habitsAfter = [];
             document.querySelectorAll('.habit-checkbox:checked').forEach(checkbox => {
-                habitsData.push(checkbox.dataset.text);
+                habitsAfter.push(checkbox.dataset.text);
             });
             
-            // Формируем сообщение
-            let symptomsText = '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nСИМПТОМЫ ДО:\n';
-            if (symptomsData.length > 0) {
-                symptomsData.forEach((s, i) => {
-                    symptomsText += `${i + 1}. ${s.symptom} → ${s.intensity}/10\n`;
+            // Вычисляем изменения
+            const weightBefore = beforeData.measurements.weight || 0;
+            const weightAfter = parseFloat(formData.get('weight')) || 0;
+            const weightDiff = (weightAfter - weightBefore).toFixed(1);
+            
+            const waistBefore = beforeData.measurements.waist || 0;
+            const waistAfter = parseFloat(formData.get('waist')) || 0;
+            const waistDiff = waistAfter ? (waistAfter - waistBefore).toFixed(1) : null;
+            
+            const hipsBefore = beforeData.measurements.hips || 0;
+            const hipsAfter = parseFloat(formData.get('hips')) || 0;
+            const hipsDiff = hipsAfter ? (hipsAfter - hipsBefore).toFixed(1) : null;
+            
+            const chestBefore = beforeData.measurements.chest || 0;
+            const chestAfter = parseFloat(formData.get('chest')) || 0;
+            const chestDiff = chestAfter ? (chestAfter - chestBefore).toFixed(1) : null;
+            
+            const overallBefore = beforeData.goals?.overall || 0;
+            const overallAfter = parseInt(formData.get('overall')) || 0;
+            const overallDiff = overallAfter - overallBefore;
+            
+            // Анализ симптомов
+            const symptomsBefore = beforeData.symptoms || [];
+            const disappeared = [];
+            const decreased = [];
+            const unchanged = [];
+            const increased = [];
+            
+            symptomsBefore.forEach(s => {
+                const afterSymptom = symptomsAfter.find(sa => sa.symptom === s.symptom);
+                if (!afterSymptom) {
+                    disappeared.push({ symptom: s.symptom, before: s.intensity });
+                } else if (afterSymptom.intensity < s.intensity) {
+                    decreased.push({ symptom: s.symptom, before: s.intensity, after: afterSymptom.intensity });
+                } else if (afterSymptom.intensity > s.intensity) {
+                    increased.push({ symptom: s.symptom, before: s.intensity, after: afterSymptom.intensity });
+                } else {
+                    unchanged.push({ symptom: s.symptom, intensity: afterSymptom.intensity });
+                }
+            });
+            
+            // Новые симптомы
+            const newSymptoms = symptomsAfter.filter(sa => !symptomsBefore.find(sb => sb.symptom === sa.symptom));
+            
+            // Анализ привычек
+            const habitsBefore = beforeData.habits || [];
+            const newHabits = habitsAfter.filter(h => !habitsBefore.includes(h));
+            const lostHabits = habitsBefore.filter(h => !habitsAfter.includes(h));
+            
+            // Формируем email сообщение
+            let symptomsReport = '';
+            if (disappeared.length > 0) {
+                symptomsReport += '\n✅ ИСЧЕЗЛИ:\n';
+                disappeared.forEach(s => {
+                    symptomsReport += `   • ${s.symptom} (было ${s.before}/10)\n`;
                 });
-            } else {
-                symptomsText += 'Симптомы не отмечены\n';
+            }
+            if (decreased.length > 0) {
+                symptomsReport += '\n↓ УМЕНЬШИЛИСЬ:\n';
+                decreased.forEach(s => {
+                    symptomsReport += `   • ${s.symptom}: ${s.before}/10 → ${s.after}/10\n`;
+                });
+            }
+            if (increased.length > 0) {
+                symptomsReport += '\n↑ УСИЛИЛИСЬ:\n';
+                increased.forEach(s => {
+                    symptomsReport += `   • ${s.symptom}: ${s.before}/10 → ${s.after}/10\n`;
+                });
+            }
+            if (unchanged.length > 0) {
+                symptomsReport += '\n→ БЕЗ ИЗМЕНЕНИЙ:\n';
+                unchanged.forEach(s => {
+                    symptomsReport += `   • ${s.symptom}: ${s.intensity}/10\n`;
+                });
+            }
+            if (newSymptoms.length > 0) {
+                symptomsReport += '\n⚠️ НОВЫЕ СИМПТОМЫ:\n';
+                newSymptoms.forEach(s => {
+                    symptomsReport += `   • ${s.symptom}: ${s.intensity}/10\n`;
+                });
+            }
+            if (symptomsReport === '') {
+                symptomsReport = '\nСимптомы не отмечены\n';
             }
             
-            let habitsText = '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nПРИВЫЧКИ ДО:\n';
-            if (habitsData.length > 0) {
-                habitsData.forEach((h, i) => {
-                    habitsText += `${i + 1}. ${h}\n`;
+            let habitsReport = '';
+            if (newHabits.length > 0) {
+                habitsReport += '\n✨ НОВЫЕ ПРИВЫЧКИ:\n';
+                newHabits.forEach((h, i) => {
+                    habitsReport += `   ${i + 1}. ${h}\n`;
                 });
-            } else {
-                habitsText += 'Привычки не отмечены\n';
+            }
+            if (lostHabits.length > 0) {
+                habitsReport += '\n❌ УТРАЧЕННЫЕ ПРИВЫЧКИ:\n';
+                lostHabits.forEach((h, i) => {
+                    habitsReport += `   ${i + 1}. ${h}\n`;
+                });
             }
             
             const fullMessage = `
 ╔════════════════════════════════════════╗
-   РЕЗУЛЬТАТЫ "ПЛАТЬЕ МЕЧТЫ" - ПОСЛЕ ПРОХОЖДЕНИЯ ПРОГРАММЫ
+   РЕЗУЛЬТАТЫ "ПЛАТЬЕ МЕЧТЫ" - ПОСЛЕ ПРОГРАММЫ
 ╚════════════════════════════════════════╝
 
 🔑 КОД КЛИЕНТА: ${clientCode}
 📅 Дата: ${new Date().toLocaleString('ru-RU')}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ЛИЧНЫЕ ДАННЫЕ:
+👤 ЛИЧНЫЕ ДАННЫЕ:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Имя: ${formData.get('name')}
-Возраст: ${formData.get('age')} лет
+Имя: ${beforeData.personalData.name}
+Возраст: ${beforeData.personalData.age} лет
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-АНТРОПОМЕТРИЯ ДО:
+📊 СРАВНЕНИЕ АНТРОПОМЕТРИИ:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Вес: ${formData.get('weight')} кг
-Рост: ${formData.get('height')} см
-Грудь: ${formData.get('chest') || 'не указано'} см
-Талия: ${formData.get('waist') || 'не указано'} см
-Бёдра: ${formData.get('hips') || 'не указано'} см
-${symptomsText}${habitsText}
+
+ВЕС:
+   ДО: ${weightBefore} кг
+   ПОСЛЕ: ${weightAfter} кг
+   ИЗМЕНЕНИЕ: ${weightDiff > 0 ? '+' : ''}${weightDiff} кг ${weightDiff < 0 ? '✅' : weightDiff > 0 ? '⚠️' : ''}
+
+РОСТ:
+   ДО: ${beforeData.measurements.height} см
+   ПОСЛЕ: ${formData.get('height')} см
+
+${chestDiff ? `ГРУДЬ:
+   ДО: ${chestBefore} см
+   ПОСЛЕ: ${chestAfter} см
+   ИЗМЕНЕНИЕ: ${chestDiff > 0 ? '+' : ''}${chestDiff} см
+` : ''}
+${waistDiff ? `ТАЛИЯ:
+   ДО: ${waistBefore} см
+   ПОСЛЕ: ${waistAfter} см
+   ИЗМЕНЕНИЕ: ${waistDiff > 0 ? '+' : ''}${waistDiff} см ${waistDiff < 0 ? '✅' : waistDiff > 0 ? '⚠️' : ''}
+` : ''}
+${hipsDiff ? `БЁДРА:
+   ДО: ${hipsBefore} см
+   ПОСЛЕ: ${hipsAfter} см
+   ИЗМЕНЕНИЕ: ${hipsDiff > 0 ? '+' : ''}${hipsDiff} см ${hipsDiff < 0 ? '✅' : hipsDiff > 0 ? '⚠️' : ''}
+` : ''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ЦЕЛИ И ОЖИДАНИЯ:
+🩺 ДИНАМИКА СИМПТОМОВ:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 Цель по физическому здоровью:
-${formData.get('goal_physical') || 'не указана'}
+${symptomsReport}
+${habitsReport ? '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n✨ ПРИВЫЧКИ:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━' + habitsReport : ''}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⭐ ОБЩАЯ ОЦЕНКА:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ДО: ${overallBefore}/10
+   ПОСЛЕ: ${overallAfter}/10
+   УЛУЧШЕНИЕ: ${overallDiff > 0 ? '+' : ''}${overallDiff} ${overallDiff === 1 ? 'балл' : overallDiff < 5 ? 'балла' : 'баллов'} ${overallDiff > 0 ? '🎉' : ''}
 
-💚 Цель по эмоциональному здоровью:
-${formData.get('goal_emotional') || 'не указана'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💭 ЧТО МОЖНО УЛУЧШИТЬ:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${formData.get('improvements') || 'не указано'}
 
-👗 Образ "Новая Я" в ПЛАТЬЕ МЕЧТЫ:
-${formData.get('goal_dream_dress') || 'не указан'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💬 ОТЗЫВ О ПРОГРАММЕ:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${formData.get('review') || 'не указан'}
 
-Ожидания от прохождения программы:
-${formData.get('expectations') || 'не указаны'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 ДОСТИЖЕНИЕ ЦЕЛЕЙ (оценка /10):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${formData.get('goals_achievement') || 'не указано'}
 
-Общая оценка ДО: ${formData.get('overall')}/10
+Как реализованы цели:
+${formData.get('goals_realization') || 'не указано'}
 
-Комментарии:
-${formData.get('comments') || 'нет'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💖 ВПЕЧАТЛЕНИЯ ОТ ПРОГРАММЫ:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Что понравилось:
+${formData.get('liked') || 'не указано'}
+
+Что можно улучшить:
+${formData.get('improve_program') || 'не указано'}
+
+Рекомендую ли программу: ${formData.get('recommend') || 'не указано'}
 
 ═══════════════════════════════════════
-⚠️ ВАЖНО: Сохраните КОД КЛИЕНТА: ${clientCode}
-Он понадобится для сравнения результатов после прохождения программы!
 
-Программа "Платье Мечты" 👗
+ПЛАТЬЕ МЕЧТЫ 👗
+Ольга Жаркова
+Нутрициолог-психолог
             `;
 
-            // Сохраняем данные в localStorage для возможности восстановления
-            const surveyData = {
+            // Сохраняем данные ПОСЛЕ в localStorage
+            const surveyAfterData = {
                 clientCode: clientCode,
                 timestamp: new Date().toISOString(),
                 personalData: {
-                    name: formData.get('name'),
-                    age: formData.get('age')
+                    name: beforeData.personalData.name,
+                    age: beforeData.personalData.age
                 },
                 measurements: {
-                    weight: formData.get('weight'),
+                    weight: weightAfter,
                     height: formData.get('height'),
-                    chest: formData.get('chest'),
-                    waist: formData.get('waist'),
-                    hips: formData.get('hips')
+                    chest: chestAfter,
+                    waist: waistAfter,
+                    hips: hipsAfter
                 },
-                symptoms: symptomsData,
-                habits: habitsData,
+                symptoms: symptomsAfter,
+                habits: habitsAfter,
                 goals: {
-                    goal_physical: formData.get('goal_physical'),
-                    goal_emotional: formData.get('goal_emotional'),
-                    goal_dream_dress: formData.get('goal_dream_dress'),
-                    expectations: formData.get('expectations'),
-                    overall: formData.get('overall'),
-                    comments: formData.get('comments')
-                }
+                    overall: overallAfter,
+                    improvements: formData.get('improvements'),
+                    review: formData.get('review'),
+                    goals_achievement: formData.get('goals_achievement'),
+                    goals_realization: formData.get('goals_realization'),
+                    liked: formData.get('liked'),
+                    improve_program: formData.get('improve_program'),
+                    recommend: formData.get('recommend')
+                },
+                beforeData: beforeData
             };
             
-            localStorage.setItem(`survey_before_${clientCode}`, JSON.stringify(surveyData));
+            localStorage.setItem(`survey_after_${clientCode}`, JSON.stringify(surveyAfterData));
             
             // Отправка через EmailJS
             const templateParams = {
                 to_email: 'ol_zubova@mail.ru',
-                from_name: formData.get('name'),
+                from_name: beforeData.personalData.name,
                 client_code: clientCode,
-                subject: `[ПОСЛЕ ПРОГРАММЫ] ${formData.get('name')} (${clientCode})`,
+                subject: `[ПОСЛЕ ПРОГРАММЫ] ${beforeData.personalData.name} (${clientCode})`,
                 message: fullMessage
             };
             
             emailjs.send('service_9m21buc', 'template_cytb9gl', templateParams)
                 .then(function(response) {
-                    console.log('SUCCESS!', response.status, response.text);
+                    console.log('Email SUCCESS!', response.status, response.text);
                     loader.classList.remove('show');
                     successMessage.classList.add('show');
                     submitBtn.style.display = 'none';
                     successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Сохраняем данные для PDF
+                    window.surveyDataAfterForPdf = {
+                        clientCode: clientCode,
+                        formData: formData,
+                        symptomsData: symptomsAfter,
+                        habitsData: habitsAfter,
+                        beforeData: beforeData,
+                        fullMessage: fullMessage
+                    };
                 }, function(error) {
-                    console.error('FAILED...', error);
-                    loader.classList.remove('show');
-                    errorMessage.textContent = 'Ошибка отправки. Данные сохранены локально. Свяжитесь с Ольгой Жарковой.';
+                    console.error('Email FAILED...', error);
+                    errorMessage.textContent = '✗ Произошла ошибка при отправке email: ' + error.text;
                     errorMessage.classList.add('show');
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Отправить результаты';
+                    loader.classList.remove('show');
                 });
-                
-            // Сохраняем данные для PDF
-            window.surveyDataAfterForPdf = {
-                clientCode,
-                formData,
-                symptomsData,
-                habitsData,
-                beforeData: savedData,
-                fullMessage
-            };
         });
         
         // Функция генерации PDF со сравнением
@@ -1110,7 +1246,16 @@ ${formData.get('comments') || 'нет'}
     <style>
         @media print {
             @page { margin: 0; }
-            body { margin: 0; padding: 0; }
+            body { 
+                margin: 0; 
+                padding: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .header, .congrats-box, .cta-box, .channel-box {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
         }
         body {
             font-family: 'Montserrat', Arial, sans-serif;
