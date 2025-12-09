@@ -611,7 +611,9 @@
                 <!-- Привычки и практики -->
                 <div class="section">
                     <h2 class="section-title">Оценка привычек и практик</h2>
-                    <p class="info-text" style="margin-bottom: 20px;">Отметьте утверждения, которые соответствуют вашему текущему состоянию</p>
+                    <p class="info-text" style="margin-bottom: 20px;">
+                        Введите код клиента выше, чтобы загрузить привычки, над которыми вы работали
+                    </p>
                     
                     <div id="habitsContainer"></div>
                 </div>
@@ -746,7 +748,8 @@
             "Регулярно проветриваю помещение",
             "Ем не позднее, чем за 3 часа до сна",
             "Включаю в рацион ферментированные продукты",
-            "Ограничиваю потребление кофеина (1-2 чашки в день)",
+            "Ограничиваю потребление кофеина (1-2 чашки кофе в день без молока и сахара, например, с лимоном)",
+            "Качественно пережёвываю пищу (от 60 раз каждый кусочек)",
             "Веду дневник питания или эмоций",
             "Практикую благодарность (записываю или проговариваю)",
             "Использую ароматерапию для поддержки состояния",
@@ -769,7 +772,7 @@
                 </div>
                 <div class="slider-container" id="slider-${index}">
                     <div class="slider-wrapper">
-                        <span class="slider-label">Выраженность:</span>
+                        <span class="slider-label">Выраженность: <small style="color: #999;">(1 = минимальная, 10 = максимальная)</small></span>
                         <input type="range" class="symptom-slider" data-symptom="${index}" min="1" max="10" value="5" disabled>
                         <span class="slider-value">5</span>
                     </div>
@@ -779,19 +782,10 @@
             symptomsContainer.appendChild(div);
         });
 
-        // Генерация привычек
+        // Генерация привычек - будет динамически загружаться при вводе кода
         const habitsContainer = document.getElementById('habitsContainer');
-        habits.forEach((habit, index) => {
-            const div = document.createElement('div');
-            div.className = 'checkbox-item';
-            div.innerHTML = `
-                <input type="checkbox" class="habit-checkbox" id="habit_${index}" data-text="${habit}">
-                <label for="habit_${index}">${habit}</label>
-            `;
-            habitsContainer.appendChild(div);
-        });
 
-        // Загрузка целей из опросника ДО
+        // Загрузка целей и привычек из опросника ДО
         function loadGoalsFromBefore() {
             const clientCode = document.getElementById('clientCode').value.toUpperCase().trim();
             if (clientCode.length === 8) {
@@ -802,17 +796,70 @@
                     document.getElementById('goal_emotional_before').textContent = data.goals.goal_emotional || 'не указана';
                     document.getElementById('goal_dream_dress_before').textContent = data.goals.goal_dream_dress || 'не указан';
                     
-                    // Подставляем имя и email
+                    // Подставляем имя и возраст
                     document.getElementById('name').value = data.personalData.name;
-                    document.getElementById('email').value = data.personalData.email;
                     document.getElementById('age').value = data.personalData.age;
-                    if (data.personalData.phone) {
-                        document.getElementById('phone').value = data.personalData.phone;
+                    
+                    // Загружаем привычки "Хочу сформировать"
+                    habitsContainer.innerHTML = '';
+                    const habitsWant = data.habitsWant || [];
+                    const habitsAlready = data.habitsAlready || [];
+                    
+                    if (habitsWant.length > 0) {
+                        const infoDiv = document.createElement('div');
+                        infoDiv.className = 'info-box';
+                        infoDiv.style.background = '#e8f5e9';
+                        infoDiv.style.borderLeftColor = '#4caf50';
+                        infoDiv.style.marginBottom = '20px';
+                        infoDiv.innerHTML = `
+                            <h3 style="color: #2e7d32;">✨ Привычки, над которыми вы работали:</h3>
+                            <p style="font-size: 0.9em; margin-top: 10px;">Отметьте, какие привычки вам удалось сформировать</p>
+                        `;
+                        habitsContainer.appendChild(infoDiv);
+                        
+                        habitsWant.forEach((habit, index) => {
+                            const div = document.createElement('div');
+                            div.className = 'checkbox-item';
+                            div.innerHTML = `
+                                <input type="checkbox" class="habit-checkbox habit-want" id="habit_want_${index}" data-text="${habit}">
+                                <label for="habit_want_${index}">${habit}</label>
+                            `;
+                            habitsContainer.appendChild(div);
+                        });
                     }
+                    
+                    // Добавляем раздел "Другие привычки"
+                    if (habitsAlready.length > 0 || habitsWant.length > 0) {
+                        const otherInfoDiv = document.createElement('div');
+                        otherInfoDiv.className = 'info-box';
+                        otherInfoDiv.style.marginTop = '30px';
+                        otherInfoDiv.style.marginBottom = '20px';
+                        otherInfoDiv.innerHTML = `
+                            <h3>✅ Другие здоровые привычки</h3>
+                            <p style="font-size: 0.9em; margin-top: 10px;">Отметьте любые другие привычки, которые у вас появились</p>
+                        `;
+                        habitsContainer.appendChild(otherInfoDiv);
+                    }
+                    
+                    // Добавляем все привычки для выбора дополнительных
+                    habits.forEach((habit, index) => {
+                        // Не показываем те, что уже в списке "Хочу сформировать"
+                        if (!habitsWant.includes(habit)) {
+                            const div = document.createElement('div');
+                            div.className = 'checkbox-item';
+                            div.innerHTML = `
+                                <input type="checkbox" class="habit-checkbox habit-other" id="habit_other_${index}" data-text="${habit}">
+                                <label for="habit_other_${index}">${habit}</label>
+                            `;
+                            habitsContainer.appendChild(div);
+                        }
+                    });
+                    
                 } else {
                     document.getElementById('goal_physical_before').textContent = 'Данные не найдены. Проверьте код.';
                     document.getElementById('goal_emotional_before').textContent = '';
                     document.getElementById('goal_dream_dress_before').textContent = '';
+                    habitsContainer.innerHTML = '<p style="color: #d32f2f;">⚠️ Данные не найдены. Проверьте код клиента.</p>';
                 }
             }
         }
@@ -972,9 +1019,22 @@
             const newSymptoms = symptomsAfter.filter(sa => !symptomsBefore.find(sb => sb.symptom === sa.symptom));
             
             // Анализ привычек
-            const habitsBefore = beforeData.habits || [];
-            const newHabits = habitsAfter.filter(h => !habitsBefore.includes(h));
-            const lostHabits = habitsBefore.filter(h => !habitsAfter.includes(h));
+            const habitsAlreadyBefore = beforeData.habitsAlready || [];
+            const habitsWantBefore = beforeData.habitsWant || [];
+            
+            // Разделяем привычки ПОСЛЕ на категории
+            const habitsFormedFromWant = [];
+            const habitsOther = [];
+            
+            document.querySelectorAll('.habit-want:checked').forEach(checkbox => {
+                habitsFormedFromWant.push(checkbox.dataset.text);
+            });
+            
+            document.querySelectorAll('.habit-other:checked').forEach(checkbox => {
+                habitsOther.push(checkbox.dataset.text);
+            });
+            
+            const allHabitsAfter = [...habitsFormedFromWant, ...habitsOther];
             
             // Формируем email сообщение
             let symptomsReport = '';
@@ -1013,15 +1073,24 @@
             }
             
             let habitsReport = '';
-            if (newHabits.length > 0) {
-                habitsReport += '\n✨ НОВЫЕ ПРИВЫЧКИ:\n';
-                newHabits.forEach((h, i) => {
+            if (habitsFormedFromWant.length > 0) {
+                habitsReport += '\n✅ СФОРМИРОВАНЫ (из плана):\n';
+                habitsFormedFromWant.forEach((h, i) => {
                     habitsReport += `   ${i + 1}. ${h}\n`;
                 });
             }
-            if (lostHabits.length > 0) {
-                habitsReport += '\n❌ УТРАЧЕННЫЕ ПРИВЫЧКИ:\n';
-                lostHabits.forEach((h, i) => {
+            
+            const notFormed = habitsWantBefore.filter(h => !habitsFormedFromWant.includes(h));
+            if (notFormed.length > 0) {
+                habitsReport += '\n⏳ ЕЩЁ В РАБОТЕ:\n';
+                notFormed.forEach((h, i) => {
+                    habitsReport += `   ${i + 1}. ${h}\n`;
+                });
+            }
+            
+            if (habitsOther.length > 0) {
+                habitsReport += '\n✨ ДРУГИЕ НОВЫЕ ПРИВЫЧКИ:\n';
+                habitsOther.forEach((h, i) => {
                     habitsReport += `   ${i + 1}. ${h}\n`;
                 });
             }
@@ -1132,7 +1201,9 @@ ${formData.get('improve_program') || 'не указано'}
                     hips: hipsAfter
                 },
                 symptoms: symptomsAfter,
-                habits: habitsAfter,
+                habitsFormedFromWant: habitsFormedFromWant,
+                habitsOther: habitsOther,
+                allHabitsAfter: allHabitsAfter,
                 goals: {
                     overall: overallAfter,
                     improvements: formData.get('improvements'),
