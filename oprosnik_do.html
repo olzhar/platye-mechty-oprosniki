@@ -375,6 +375,86 @@
             flex: 1;
         }
 
+        /* Стили для привычек с тремя столбцами */
+        .habit-row {
+            background: var(--bg-light);
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .habit-row:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(212, 175, 122, 0.1);
+        }
+
+        .habit-text {
+            flex: 1;
+            font-size: 0.95em;
+            color: #2c2c2c;
+        }
+
+        .habit-options {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .habit-option {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .habit-option:hover {
+            border-color: var(--primary);
+            background: #fef9f4;
+        }
+
+        .habit-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .habit-option input[type="radio"]:checked + span {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .habit-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .habit-options {
+                width: 100%;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .habit-option {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+
         .submit-btn {
             background: linear-gradient(135deg, var(--red-dress) 0%, #a01f24 100%);
             color: white;
@@ -674,13 +754,13 @@
                     <div style="font-size: 0.9em; margin-top: 15px; opacity: 0.9;">
                         ⚠️ Сохраните этот код! Он понадобится после прохождения программы для сравнения результатов.
                     </div>
-                    <div style="background: #2e7d32; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 0.95em; line-height: 1.8; color: white;">
-                        <div style="font-weight: 700; margin-bottom: 10px; font-size: 1.05em;">📱 Как сохранить результаты:</div>
-                        <div style="margin-bottom: 8px;">💻 <strong>Компьютер:</strong> Нажмите кнопку → выберите "Сохранить как PDF"</div>
-                        <div>📱 <strong>Телефон:</strong> Нажмите кнопку → сделайте скриншот экрана</div>
+                    <div style="padding: 15px 0; margin-top: 20px; font-size: 0.95em; line-height: 1.8;">
+                        <div style="font-weight: 700; margin-bottom: 12px; font-size: 1.05em; color: #2c2c2c;">📱 Как сохранить результаты:</div>
+                        <div style="margin-bottom: 8px; color: #0066cc;"><strong>💻 Компьютер:</strong> Нажмите кнопку → выберите "Сохранить как PDF"</div>
+                        <div style="color: #ff6600;"><strong>📱 Телефон:</strong> Нажмите кнопку → сделайте скриншот экрана</div>
                     </div>
-                    <button id="downloadPdfBtn" style="margin-top: 25px; background: #d4af7a; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
-                        📄 Скачать результаты в PDF
+                    <button id="downloadPdfBtn" style="margin-top: 25px; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); color: white; border: none; padding: 18px 40px; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4); text-transform: uppercase; letter-spacing: 0.5px;">
+                        ⭐ ПОЛУЧИТЬ РЕЗУЛЬТАТЫ
                     </button>
                 </div>
                 <div class="message-box error-message" id="errorMessage">
@@ -788,10 +868,23 @@
         const habitsContainer = document.getElementById('habitsContainer');
         habits.forEach((habit, index) => {
             const div = document.createElement('div');
-            div.className = 'checkbox-item';
+            div.className = 'habit-row';
             div.innerHTML = `
-                <input type="checkbox" class="habit-checkbox" id="habit_${index}" data-text="${habit}">
-                <label for="habit_${index}">${habit}</label>
+                <div class="habit-text">${habit}</div>
+                <div class="habit-options">
+                    <label class="habit-option">
+                        <input type="radio" class="habit-radio" name="habit_${index}" value="already" data-text="${habit}">
+                        <span>Уже есть</span>
+                    </label>
+                    <label class="habit-option">
+                        <input type="radio" class="habit-radio" name="habit_${index}" value="want" data-text="${habit}">
+                        <span>Хочу</span>
+                    </label>
+                    <label class="habit-option">
+                        <input type="radio" class="habit-radio" name="habit_${index}" value="no" data-text="${habit}" checked>
+                        <span>Не готова</span>
+                    </label>
+                </div>
             `;
             habitsContainer.appendChild(div);
         });
@@ -882,13 +975,36 @@
             if (symptomsData.length === 0) symptomsText += 'Симптомы не отмечены\n';
             
             // Собираем данные о привычках
-            let habitsData = [];
-            let habitsText = '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nПРИВЫЧКИ ДО:\n';
-            document.querySelectorAll('.habit-checkbox:checked').forEach(checkbox => {
-                habitsData.push(checkbox.dataset.text);
-                habitsText += `${habitsData.length}. ${checkbox.dataset.text}\n`;
+            let habitsAlready = [];
+            let habitsWant = [];
+            let habitsText = '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+            
+            document.querySelectorAll('.habit-radio:checked').forEach(radio => {
+                if (radio.value === 'already') {
+                    habitsAlready.push(radio.dataset.text);
+                } else if (radio.value === 'want') {
+                    habitsWant.push(radio.dataset.text);
+                }
             });
-            if (habitsData.length === 0) habitsText += 'Привычки не отмечены\n';
+            
+            if (habitsAlready.length > 0) {
+                habitsText += '✅ ПРИВЫЧКИ (УЖЕ ЕСТЬ):\n';
+                habitsAlready.forEach((h, i) => {
+                    habitsText += `   ${i + 1}. ${h}\n`;
+                });
+                habitsText += '\n';
+            }
+            
+            if (habitsWant.length > 0) {
+                habitsText += '💫 ХОЧУ СФОРМИРОВАТЬ:\n';
+                habitsWant.forEach((h, i) => {
+                    habitsText += `   ${i + 1}. ${h}\n`;
+                });
+            }
+            
+            if (habitsAlready.length === 0 && habitsWant.length === 0) {
+                habitsText += 'Привычки не выбраны\n';
+            }
             
             // Формируем полное сообщение
             const fullMessage = `
@@ -961,7 +1077,8 @@ ${formData.get('comments') || 'нет'}
                     hips: formData.get('hips')
                 },
                 symptoms: symptomsData,
-                habits: habitsData,
+                habitsAlready: habitsAlready,
+                habitsWant: habitsWant,
                 goals: {
                     goal_physical: formData.get('goal_physical'),
                     goal_emotional: formData.get('goal_emotional'),
@@ -1078,22 +1195,22 @@ ${formData.get('comments') || 'нет'}
             grid-template-columns: 1fr 1fr;
             gap: 10px;
             margin: 10px 0;
-            font-size: 15px;
+            font-size: 17px;
         }
         .measurement-card {
             background: #fdfbf7;
-            padding: 10px;
+            padding: 12px;
             border-radius: 6px;
         }
         .symptom-item {
             background: #fdfbf7;
-            padding: 10px;
-            margin-bottom: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
             border-radius: 6px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 14px;
+            font-size: 16px;
         }
         .symptom-badge {
             background: #d4af7a;
@@ -1104,30 +1221,30 @@ ${formData.get('comments') || 'нет'}
             font-weight: bold;
         }
         .habit-item {
-            padding: 6px 0;
-            font-size: 14px;
-            line-height: 1.6;
+            padding: 8px 0;
+            font-size: 16px;
+            line-height: 1.7;
         }
         .goal-box {
             background: #f5e6d3;
-            padding: 12px;
+            padding: 15px;
             border-radius: 6px;
             margin-bottom: 12px;
             border-left: 3px solid #d4af7a;
-            font-size: 14px;
-            line-height: 1.7;
+            font-size: 16px;
+            line-height: 1.8;
         }
         .overall-badge {
             display: inline-block;
             background: #d4af7a;
             color: white;
-            width: 120px;
-            height: 120px;
+            width: 140px;
+            height: 140px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 52px;
+            font-size: 64px;
             font-weight: bold;
             margin: 20px auto;
         }
