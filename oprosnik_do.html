@@ -1275,7 +1275,7 @@ ${formData.get('comments') || 'нет'}
     
     <div class="section">
         <h2 class="section-title">👤 ЛИЧНЫЕ ДАННЫЕ</h2>
-        <div style="font-size: 11px; line-height: 1.6;">
+        <div style="font-size: 20px; line-height: 1.8;">
             <div><strong>Имя:</strong> ${data.formData.get('name')}</div>
             <div><strong>Возраст:</strong> ${data.formData.get('age')} лет</div>
         </div>
@@ -1285,27 +1285,27 @@ ${formData.get('comments') || 'нет'}
         <h2 class="section-title">📏 АНТРОПОМЕТРИЯ</h2>
         <div class="measurement-grid">
             <div class="measurement-card">
-                <div style="color: #6b6b6b; font-size: 9px;">Вес</div>
-                <div style="color: #d4af7a; font-size: 16px; font-weight: bold;">${data.formData.get('weight')} кг</div>
+                <div style="color: #6b6b6b; font-size: 16px; font-weight: 600;">Вес</div>
+                <div style="color: #d4af7a; font-size: 22px; font-weight: bold;">${data.formData.get('weight')} кг</div>
             </div>
             <div class="measurement-card">
-                <div style="color: #6b6b6b; font-size: 9px;">Рост</div>
-                <div style="color: #d4af7a; font-size: 16px; font-weight: bold;">${data.formData.get('height')} см</div>
+                <div style="color: #6b6b6b; font-size: 16px; font-weight: 600;">Рост</div>
+                <div style="color: #d4af7a; font-size: 22px; font-weight: bold;">${data.formData.get('height')} см</div>
             </div>
             ${data.formData.get('chest') ? `
             <div class="measurement-card">
-                <div style="color: #6b6b6b; font-size: 9px;">Грудь</div>
-                <div style="color: #d4af7a; font-size: 16px; font-weight: bold;">${data.formData.get('chest')} см</div>
+                <div style="color: #6b6b6b; font-size: 16px; font-weight: 600;">Грудь</div>
+                <div style="color: #d4af7a; font-size: 22px; font-weight: bold;">${data.formData.get('chest')} см</div>
             </div>` : ''}
             ${data.formData.get('waist') ? `
             <div class="measurement-card">
-                <div style="color: #6b6b6b; font-size: 9px;">Талия</div>
-                <div style="color: #d4af7a; font-size: 16px; font-weight: bold;">${data.formData.get('waist')} см</div>
+                <div style="color: #6b6b6b; font-size: 16px; font-weight: 600;">Талия</div>
+                <div style="color: #d4af7a; font-size: 22px; font-weight: bold;">${data.formData.get('waist')} см</div>
             </div>` : ''}
             ${data.formData.get('hips') ? `
             <div class="measurement-card">
-                <div style="color: #6b6b6b; font-size: 9px;">Бёдра</div>
-                <div style="color: #d4af7a; font-size: 16px; font-weight: bold;">${data.formData.get('hips')} см</div>
+                <div style="color: #6b6b6b; font-size: 16px; font-weight: 600;">Бёдра</div>
+                <div style="color: #d4af7a; font-size: 22px; font-weight: bold;">${data.formData.get('hips')} см</div>
             </div>` : ''}
         </div>
     </div>
@@ -1371,10 +1371,10 @@ ${formData.get('comments') || 'нет'}
     </div>
     
     <div class="footer">
-        <div style="font-size: 12px; margin-bottom: 5px; font-weight: bold; color: #6b6b6b;">ПЛАТЬЕ МЕЧТЫ 👗</div>
-        <div style="font-weight: bold; color: #6b6b6b; margin-bottom: 3px;">Ольга Жаркова</div>
-        <div style="font-size: 8px; margin-bottom: 8px;">Нутрициолог-психолог</div>
-        <div style="font-size: 10px; margin-top: 5px;">
+        <div style="font-size: 18px; margin-bottom: 8px; font-weight: bold; color: #6b6b6b;">ПЛАТЬЕ МЕЧТЫ 👗</div>
+        <div style="font-weight: bold; color: #6b6b6b; margin-bottom: 5px; font-size: 16px;">Ольга Жаркова</div>
+        <div style="font-size: 14px; margin-bottom: 10px;">Нутрициолог-психолог</div>
+        <div style="font-size: 16px; margin-top: 8px;">
             📱 <a href="https://t.me/olga_zharkova_health" target="_blank" style="color: #6b6b6b; text-decoration: none;">t.me/olga_zharkova_health</a>
         </div>
     </div>

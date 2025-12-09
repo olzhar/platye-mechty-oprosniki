@@ -803,10 +803,13 @@
         // Загрузка целей из опросника ДО
         function loadGoalsFromBefore() {
             const clientCode = document.getElementById('clientCode').value.toUpperCase().trim();
+            console.log('Введён код:', clientCode);
             if (clientCode.length === 8) {
                 const savedData = localStorage.getItem(`survey_before_${clientCode}`);
+                console.log('Найдены данные:', savedData ? 'ДА' : 'НЕТ');
                 if (savedData) {
                     const data = JSON.parse(savedData);
+                    console.log('Данные загружены:', data);
                     document.getElementById('goal_physical_before').textContent = data.goals.goal_physical || 'не указана';
                     document.getElementById('goal_emotional_before').textContent = data.goals.goal_emotional || 'не указана';
                     document.getElementById('goal_dream_dress_before').textContent = data.goals.goal_dream_dress || 'не указан';
@@ -1404,18 +1407,18 @@ ${formData.get('improve_program') || 'не указано'}
     </div>
     
     <div style="margin: 25px 0;">
-        <h2 style="color: #7ba67d; font-size: 18px; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; margin-bottom: 12px;">
+        <h2 style="color: #7ba67d; font-size: 26px; border-bottom: 2px solid #e8f5e9; padding-bottom: 10px; margin-bottom: 15px;">
             📊 СРАВНЕНИЕ АНТРОПОМЕТРИИ
         </h2>
-        <div class="comparison-grid" style="font-weight: bold; color: #6b6b6b; font-size: 13px;">
+        <div class="comparison-grid" style="font-weight: bold; color: #6b6b6b; font-size: 18px;">
             <div>ДО</div>
             <div>ПОСЛЕ</div>
             <div>ИЗМЕНЕНИЕ</div>
         </div>
         
         <div class="comparison-row">
-            <div style="font-size: 14px; color: #6b6b6b; margin-bottom: 5px;">ВЕС</div>
-            <div class="comparison-grid" style="font-size: 16px; font-weight: bold;">
+            <div style="font-size: 20px; color: #6b6b6b; margin-bottom: 8px; font-weight: 600;">ВЕС</div>
+            <div class="comparison-grid" style="font-size: 22px; font-weight: bold;">
                 <div>${weightBefore} кг</div>
                 <div style="color: #7ba67d;">${weightAfter} кг</div>
                 <div style="color: ${weightDiff < 0 ? '#7ba67d' : '#c1272d'};">
@@ -1426,8 +1429,8 @@ ${formData.get('improve_program') || 'не указано'}
         
         ${waistDiff ? `
         <div class="comparison-row">
-            <div style="font-size: 14px; color: #6b6b6b; margin-bottom: 5px;">ТАЛИЯ</div>
-            <div class="comparison-grid" style="font-size: 16px; font-weight: bold;">
+            <div style="font-size: 20px; color: #6b6b6b; margin-bottom: 8px; font-weight: 600;">ТАЛИЯ</div>
+            <div class="comparison-grid" style="font-size: 22px; font-weight: bold;">
                 <div>${waistBefore} см</div>
                 <div style="color: #7ba67d;">${waistAfter} см</div>
                 <div style="color: ${waistDiff < 0 ? '#7ba67d' : '#c1272d'};">
@@ -1438,8 +1441,8 @@ ${formData.get('improve_program') || 'не указано'}
         
         ${hipsDiff ? `
         <div class="comparison-row">
-            <div style="font-size: 10px; color: #6b6b6b; margin-bottom: 5px;">БЁДРА</div>
-            <div class="comparison-grid" style="font-size: 12px; font-weight: bold;">
+            <div style="font-size: 20px; color: #6b6b6b; margin-bottom: 8px; font-weight: 600;">БЁДРА</div>
+            <div class="comparison-grid" style="font-size: 22px; font-weight: bold;">
                 <div>${hipsBefore} см</div>
                 <div style="color: #7ba67d;">${hipsAfter} см</div>
                 <div style="color: ${hipsDiff < 0 ? '#7ba67d' : '#c1272d'};">
@@ -1450,15 +1453,15 @@ ${formData.get('improve_program') || 'не указано'}
     </div>
     
     <div style="margin: 25px 0;">
-        <h2 style="color: #7ba67d; font-size: 14px; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; margin-bottom: 12px;">
+        <h2 style="color: #7ba67d; font-size: 26px; border-bottom: 2px solid #e8f5e9; padding-bottom: 10px; margin-bottom: 15px;">
             🩺 ДИНАМИКА СИМПТОМОВ
         </h2>
         
         ${disappeared.length > 0 ? `
-            <div style="margin-bottom: 15px;">
-                <div style="color: #7ba67d; font-weight: bold; font-size: 11px; margin-bottom: 8px;">✅ ИСЧЕЗЛИ:</div>
+            <div style="margin-bottom: 18px;">
+                <div style="color: #7ba67d; font-weight: bold; font-size: 20px; margin-bottom: 10px;">✅ ИСЧЕЗЛИ:</div>
                 ${disappeared.map(s => `
-                    <div style="background: #e8f5e9; padding: 8px; margin-bottom: 4px; border-radius: 4px; font-size: 10px; border-left: 3px solid #7ba67d;">
+                    <div style="background: #e8f5e9; padding: 12px; margin-bottom: 6px; border-radius: 6px; font-size: 18px; border-left: 4px solid #7ba67d;">
                         ${s.symptom} <span style="color: #6b6b6b;">(было ${s.before}/10)</span>
                     </div>
                 `).join('')}
@@ -1466,10 +1469,10 @@ ${formData.get('improve_program') || 'не указано'}
         ` : ''}
         
         ${decreased.length > 0 ? `
-            <div style="margin-bottom: 15px;">
-                <div style="color: #ffc107; font-weight: bold; font-size: 11px; margin-bottom: 8px;">↓ УМЕНЬШИЛИСЬ:</div>
+            <div style="margin-bottom: 18px;">
+                <div style="color: #ffc107; font-weight: bold; font-size: 20px; margin-bottom: 10px;">↓ УМЕНЬШИЛИСЬ:</div>
                 ${decreased.map(s => `
-                    <div style="background: #fff9e6; padding: 8px; margin-bottom: 4px; border-radius: 4px; font-size: 10px; border-left: 3px solid #ffc107;">
+                    <div style="background: #fff9e6; padding: 12px; margin-bottom: 6px; border-radius: 6px; font-size: 18px; border-left: 4px solid #ffc107;">
                         ${s.symptom}: ${s.before}/10 → ${s.after}/10
                     </div>
                 `).join('')}
@@ -1491,49 +1494,49 @@ ${formData.get('improve_program') || 'не указано'}
     ` : ''}
     
     <div style="margin: 25px 0; text-align: center;">
-        <h2 style="color: #7ba67d; font-size: 14px; margin-bottom: 15px;">⭐ ОБЩАЯ ОЦЕНКА</h2>
-        <div style="display: flex; justify-content: center; align-items: center; gap: 20px;">
+        <h2 style="color: #7ba67d; font-size: 26px; margin-bottom: 20px;">⭐ ОБЩАЯ ОЦЕНКА</h2>
+        <div style="display: flex; justify-content: center; align-items: center; gap: 30px;">
             <div>
-                <div style="color: #6b6b6b; font-size: 9px; margin-bottom: 5px;">ДО</div>
-                <div style="display: inline-block; background: #c17b6f; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold;">
+                <div style="color: #6b6b6b; font-size: 18px; margin-bottom: 10px; font-weight: 600;">ДО</div>
+                <div style="display: inline-block; background: #c17b6f; color: white; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold;">
                     ${overallBefore}
                 </div>
             </div>
-            <div style="font-size: 24px; color: #7ba67d;">→</div>
+            <div style="font-size: 36px; color: #7ba67d;">→</div>
             <div>
-                <div style="color: #6b6b6b; font-size: 9px; margin-bottom: 5px;">ПОСЛЕ</div>
-                <div style="display: inline-block; background: #7ba67d; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold;">
+                <div style="color: #6b6b6b; font-size: 18px; margin-bottom: 10px; font-weight: 600;">ПОСЛЕ</div>
+                <div style="display: inline-block; background: #7ba67d; color: white; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold;">
                     ${overallAfter}
                 </div>
             </div>
         </div>
-        <div style="margin-top: 15px; color: #7ba67d; font-size: 13px; font-weight: bold;">
+        <div style="margin-top: 20px; color: #7ba67d; font-size: 22px; font-weight: bold;">
             Улучшение на ${overallDiff > 0 ? '+' : ''}${overallDiff} ${overallDiff === 1 ? 'балл' : overallDiff < 5 ? 'балла' : 'баллов'}! 🎉
         </div>
     </div>
     
     <div class="cta-box">
-        <div style="text-align: center; font-size: 20px; color: #d4af7a; margin-bottom: 15px;">
+        <div style="text-align: center; font-size: 28px; color: #d4af7a; margin-bottom: 20px; font-weight: bold;">
             ✨ КАКАЯ ВЫ УМНИЦА!
         </div>
         
-        <div style="font-size: 11px; line-height: 1.8; color: #2c2c2c; margin-bottom: 15px;">
-            <p style="margin: 0 0 10px 0;">Вы заложили основы преображения... Новая реальность – следствие новой личности...</p>
+        <div style="font-size: 18px; line-height: 1.8; color: #2c2c2c; margin-bottom: 18px;">
+            <p style="margin: 0 0 12px 0;">Вы заложили основы преображения... Новая реальность – следствие новой личности...</p>
             
-            <p style="margin: 0 0 15px 0;"><strong>Готовы продолжить путь к Новой Я?</strong></p>
+            <p style="margin: 0 0 18px 0;"><strong>Готовы продолжить путь к Новой Я?</strong></p>
         </div>
         
-        <div style="font-size: 10px; line-height: 1.6; color: #2c2c2c; margin-bottom: 15px;">
-            <div style="margin-bottom: 8px;">
-                <span style="color: #d4af7a; font-size: 14px;">💫</span> 
+        <div style="font-size: 17px; line-height: 1.7; color: #2c2c2c; margin-bottom: 18px;">
+            <div style="margin-bottom: 10px;">
+                <span style="color: #d4af7a; font-size: 20px;">💫</span> 
                 <strong>Питание</strong> – вкусно и полезно
             </div>
-            <div style="margin-bottom: 8px;">
-                <span style="color: #d4af7a; font-size: 14px;">💫</span> 
+            <div style="margin-bottom: 10px;">
+                <span style="color: #d4af7a; font-size: 20px;">💫</span> 
                 <strong>Оздоровление</strong> – индивидуальная программа
             </div>
-            <div style="margin-bottom: 8px;">
-                <span style="color: #d4af7a; font-size: 14px;">💫</span> 
+            <div style="margin-bottom: 10px;">
+                <span style="color: #d4af7a; font-size: 20px;">💫</span> 
                 <strong>Психика</strong> – работа с установками и образом себя
             </div>
         </div>
