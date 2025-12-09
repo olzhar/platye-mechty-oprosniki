@@ -373,6 +373,70 @@
             flex: 1;
         }
 
+        .habit-row {
+            background: var(--bg-light);
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .habit-row:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(212, 175, 122, 0.1);
+        }
+
+        .habit-text {
+            font-size: 1em;
+            margin-bottom: 12px;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .habit-options {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .habit-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 8px;
+            background: white;
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .habit-option:hover {
+            border-color: var(--primary);
+            background: #fef9f4;
+        }
+
+        .habit-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--red-dress);
+        }
+
+        .habit-option span {
+            font-size: 0.95em;
+            color: var(--text);
+        }
+
+        .habit-option input[type="radio"]:checked + span {
+            font-weight: 600;
+            color: var(--red-dress);
+        }
+
+
         .submit-btn {
             background: linear-gradient(135deg, var(--red-dress) 0%, #a01f24 100%);
             color: white;
@@ -506,6 +570,19 @@
                 min-width: 80px;
                 font-size: 0.75em;
             }
+
+            .habit-options {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .habit-option {
+                min-width: 100%;
+            }
+
+            .habit-text {
+                font-size: 0.95em;
+            }
         }
 
         .loader {
@@ -602,7 +679,10 @@
                 <!-- Привычки и практики -->
                 <div class="section">
                     <h2 class="section-title">Оценка привычек и практик</h2>
-                    <p class="info-text" style="margin-bottom: 20px;">Отметьте утверждения, которые соответствуют вашему текущему состоянию</p>
+                    <p class="info-text" style="margin-bottom: 20px;">
+                        <strong>Выберите:</strong> какие привычки <span style="color: var(--red-dress);">уже есть</span> и 
+                        2-3 привычки, над которыми <span style="color: #7ba67d);">будете работать</span> в ближайшее время.
+                    </p>
                     
                     <div id="habitsContainer"></div>
                 </div>
@@ -730,7 +810,8 @@
             "Регулярно проветриваю помещение",
             "Ем не позднее, чем за 3 часа до сна",
             "Включаю в рацион ферментированные продукты",
-            "Ограничиваю потребление кофеина (1-2 чашки в день)",
+            "Ограничиваю потребление кофеина (1-2 чашки кофе в день без молока и сахара, например, с лимоном)",
+            "Качественно пережёвываю пищу (от 60 раз каждый кусочек)",
             "Веду дневник питания или эмоций",
             "Практикую благодарность (записываю или проговариваю)",
             "Использую ароматерапию для поддержки состояния",
@@ -753,7 +834,7 @@
                 </div>
                 <div class="slider-container" id="slider-${index}">
                     <div class="slider-wrapper">
-                        <span class="slider-label">Выраженность:</span>
+                        <span class="slider-label">Выраженность: <small style="color: #999;">(1 = минимальная, 10 = максимальная)</small></span>
                         <input type="range" class="symptom-slider" data-symptom="${index}" min="1" max="10" value="5" disabled>
                         <span class="slider-value">5</span>
                     </div>
@@ -763,14 +844,27 @@
             symptomsContainer.appendChild(div);
         });
 
-        // Генерация привычек
+        // Генерация привычек с двумя столбцами
         const habitsContainer = document.getElementById('habitsContainer');
         habits.forEach((habit, index) => {
             const div = document.createElement('div');
-            div.className = 'checkbox-item';
+            div.className = 'habit-row';
             div.innerHTML = `
-                <input type="checkbox" class="habit-checkbox" id="habit_${index}" data-text="${habit}">
-                <label for="habit_${index}">${habit}</label>
+                <div class="habit-text">${habit}</div>
+                <div class="habit-options">
+                    <label class="habit-option">
+                        <input type="radio" name="habit_${index}" value="already" class="habit-radio" data-text="${habit}">
+                        <span>Привычка уже есть</span>
+                    </label>
+                    <label class="habit-option">
+                        <input type="radio" name="habit_${index}" value="want" class="habit-radio" data-text="${habit}">
+                        <span>Хочу сформировать</span>
+                    </label>
+                    <label class="habit-option">
+                        <input type="radio" name="habit_${index}" value="no" class="habit-radio" checked>
+                        <span>Не актуально</span>
+                    </label>
+                </div>
             `;
             habitsContainer.appendChild(div);
         });
@@ -861,13 +955,34 @@
             if (symptomsData.length === 0) symptomsText += 'Симптомы не отмечены\n';
             
             // Собираем данные о привычках
-            let habitsData = [];
-            let habitsText = '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nПРИВЫЧКИ ДО:\n';
-            document.querySelectorAll('.habit-checkbox:checked').forEach(checkbox => {
-                habitsData.push(checkbox.dataset.text);
-                habitsText += `${habitsData.length}. ${checkbox.dataset.text}\n`;
+            let habitsAlready = [];
+            let habitsWant = [];
+            let habitsText = '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n✅ ПРИВЫЧКИ (УЖЕ ЕСТЬ):\n';
+            
+            document.querySelectorAll('.habit-radio:checked').forEach(radio => {
+                if (radio.value === 'already') {
+                    habitsAlready.push(radio.dataset.text);
+                } else if (radio.value === 'want') {
+                    habitsWant.push(radio.dataset.text);
+                }
             });
-            if (habitsData.length === 0) habitsText += 'Привычки не отмечены\n';
+            
+            if (habitsAlready.length > 0) {
+                habitsAlready.forEach((h, i) => {
+                    habitsText += `   ${i + 1}. ${h}\n`;
+                });
+            } else {
+                habitsText += 'Нет сформированных привычек\n';
+            }
+            
+            habitsText += '\n💫 ХОЧУ СФОРМИРОВАТЬ:\n';
+            if (habitsWant.length > 0) {
+                habitsWant.forEach((h, i) => {
+                    habitsText += `   ${i + 1}. ${h}\n`;
+                });
+            } else {
+                habitsText += 'Не указано\n';
+            }
             
             // Формируем полное сообщение
             const fullMessage = `
@@ -937,7 +1052,8 @@ ${formData.get('comments') || 'нет'}
                     hips: formData.get('hips')
                 },
                 symptoms: symptomsData,
-                habits: habitsData,
+                habitsAlready: habitsAlready,
+                habitsWant: habitsWant,
                 goals: {
                     goal_physical: formData.get('goal_physical'),
                     goal_emotional: formData.get('goal_emotional'),
