@@ -1097,16 +1097,26 @@ ${formData.get('comments') || 'нет'}
                 </div>
             `;
             
+            // Добавляем элемент в DOM (нужно для html2pdf)
+            pdfContent.style.position = 'fixed';
+            pdfContent.style.left = '-9999px';
+            document.body.appendChild(pdfContent);
+            
             // Генерируем PDF из HTML
             const opt = {
-                margin: 0,
+                margin: 10,
                 filename: `Платье_Мечты_ДО_${data.clientCode}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true, letterRendering: true },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
             
-            await html2pdf().set(opt).from(pdfContent).save();
+            try {
+                await html2pdf().set(opt).from(pdfContent).save();
+            } finally {
+                // Удаляем элемент из DOM
+                document.body.removeChild(pdfContent);
+            }
         }
         
         // Обработчик кнопки скачивания PDF
