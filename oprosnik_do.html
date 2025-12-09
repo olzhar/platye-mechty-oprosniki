@@ -7,7 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
         // Инициализация EmailJS
         (function(){
@@ -968,137 +969,140 @@ ${formData.get('comments') || 'нет'}
             };
         });
         
-        // Функция генерации PDF
-        function generatePDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+        // Функция генерации PDF на русском языке
+        
+        // Функция генерации PDF с html2pdf
+        async function generatePDF() {
             const data = window.surveyDataForPdf;
             
-            // Настройка шрифта (поддержка кириллицы через обход)
-            doc.setFont("helvetica");
+            // Создаём HTML контент для PDF
+            const pdfContent = document.createElement('div');
+            pdfContent.style.cssText = 'padding: 20px; font-family: Montserrat, Arial, sans-serif; background: white;';
             
-            let y = 20;
-            const lineHeight = 7;
-            const margin = 20;
-            const maxWidth = 170;
+            pdfContent.innerHTML = `
+                <div style="background: linear-gradient(135deg, #e8b4bc 0%, #d4af7a 100%); padding: 30px; text-align: center; color: white; margin: -20px -20px 20px -20px; border-radius: 0;">
+                    <h1 style="margin: 0; font-size: 28px; font-weight: 300; letter-spacing: 3px;">ПЛАТЬЕ МЕЧТЫ</h1>
+                    <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.95;">Результаты ДО прохождения программы</p>
+                    <div style="font-size: 24px; margin-top: 10px;">👗</div>
+                </div>
+                
+                <div style="background: #f5e6d3; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <div style="color: #d4af7a; font-size: 11px; font-weight: 600; margin-bottom: 5px;">КОД КЛИЕНТА:</div>
+                    <div style="color: #d4af7a; font-size: 18px; font-weight: bold;">${data.clientCode}</div>
+                    <div style="color: #6b6b6b; font-size: 9px; margin-top: 5px;">Дата: ${new Date().toLocaleDateString('ru-RU')}</div>
+                </div>
+                
+                <div style="margin: 25px 0;">
+                    <h2 style="color: #d4af7a; font-size: 14px; border-bottom: 2px solid #f5e6d3; padding-bottom: 8px; margin-bottom: 12px;">
+                        👤 ЛИЧНЫЕ ДАННЫЕ
+                    </h2>
+                    <div style="font-size: 11px; line-height: 1.6;">
+                        <div><strong>Имя:</strong> ${data.formData.get('name')}</div>
+                        <div><strong>Возраст:</strong> ${data.formData.get('age')} лет</div>
+                    </div>
+                </div>
+                
+                <div style="margin: 25px 0;">
+                    <h2 style="color: #d4af7a; font-size: 14px; border-bottom: 2px solid #f5e6d3; padding-bottom: 8px; margin-bottom: 12px;">
+                        📏 АНТРОПОМЕТРИЯ
+                    </h2>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 11px;">
+                        <div style="background: #fdfbf7; padding: 10px; border-radius: 6px;">
+                            <div style="color: #6b6b6b; font-size: 9px;">Вес</div>
+                            <div style="color: #d4af7a; font-size: 16px; font-weight: bold;">${data.formData.get('weight')} кг</div>
+                        </div>
+                        <div style="background: #fdfbf7; padding: 10px; border-radius: 6px;">
+                            <div style="color: #6b6b6b; font-size: 9px;">Рост</div>
+                            <div style="color: #d4af7a; font-size: 16px; font-weight: bold;">${data.formData.get('height')} см</div>
+                        </div>
+                        ${data.formData.get('chest') ? `
+                        <div style="background: #fdfbf7; padding: 10px; border-radius: 6px;">
+                            <div style="color: #6b6b6b; font-size: 9px;">Грудь</div>
+                            <div style="color: #d4af7a; font-size: 16px; font-weight: bold;">${data.formData.get('chest')} см</div>
+                        </div>` : ''}
+                        ${data.formData.get('waist') ? `
+                        <div style="background: #fdfbf7; padding: 10px; border-radius: 6px;">
+                            <div style="color: #6b6b6b; font-size: 9px;">Талия</div>
+                            <div style="color: #d4af7a; font-size: 16px; font-weight: bold;">${data.formData.get('waist')} см</div>
+                        </div>` : ''}
+                        ${data.formData.get('hips') ? `
+                        <div style="background: #fdfbf7; padding: 10px; border-radius: 6px;">
+                            <div style="color: #6b6b6b; font-size: 9px;">Бёдра</div>
+                            <div style="color: #d4af7a; font-size: 16px; font-weight: bold;">${data.formData.get('hips')} см</div>
+                        </div>` : ''}
+                    </div>
+                </div>
+                
+                <div style="margin: 25px 0;">
+                    <h2 style="color: #d4af7a; font-size: 14px; border-bottom: 2px solid #f5e6d3; padding-bottom: 8px; margin-bottom: 12px;">
+                        🩺 СИМПТОМЫ
+                    </h2>
+                    ${data.symptomsData.length > 0 ? data.symptomsData.map((s, i) => `
+                        <div style="background: #fdfbf7; padding: 8px; margin-bottom: 6px; border-radius: 6px; font-size: 10px; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="flex: 1;">${i + 1}. ${s.symptom}</div>
+                            <div style="background: #d4af7a; color: white; padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: bold;">
+                                ${s.intensity}/10
+                            </div>
+                        </div>
+                    `).join('') : '<div style="color: #6b6b6b; font-size: 10px;">Симптомы не отмечены</div>'}
+                </div>
+                
+                <div style="margin: 25px 0;">
+                    <h2 style="color: #7ba67d; font-size: 14px; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; margin-bottom: 12px;">
+                        ✨ ПРИВЫЧКИ
+                    </h2>
+                    ${data.habitsData.length > 0 ? data.habitsData.map((h, i) => `
+                        <div style="padding: 5px 0; font-size: 10px; color: #2c2c2c;">
+                            <span style="color: #7ba67d; font-weight: bold;">✓</span> ${i + 1}. ${h}
+                        </div>
+                    `).join('') : '<div style="color: #6b6b6b; font-size: 10px;">Привычки не отмечены</div>'}
+                </div>
+                
+                <div style="margin: 25px 0;">
+                    <h2 style="color: #d4af7a; font-size: 14px; border-bottom: 2px solid #f5e6d3; padding-bottom: 8px; margin-bottom: 12px;">
+                        🎯 ЦЕЛИ И ОЖИДАНИЯ
+                    </h2>
+                    <div style="font-size: 10px; line-height: 1.6;">
+                        <div style="background: #f5e6d3; padding: 10px; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid #d4af7a;">
+                            <div style="color: #d4af7a; font-weight: bold; margin-bottom: 5px;">💪 Физическое здоровье:</div>
+                            <div>${data.formData.get('goal_physical') || 'не указано'}</div>
+                        </div>
+                        <div style="background: #f5e6d3; padding: 10px; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid #d4af7a;">
+                            <div style="color: #d4af7a; font-weight: bold; margin-bottom: 5px;">💚 Эмоциональное здоровье:</div>
+                            <div>${data.formData.get('goal_emotional') || 'не указано'}</div>
+                        </div>
+                        <div style="background: #f5e6d3; padding: 10px; border-radius: 6px; border-left: 3px solid #d4af7a;">
+                            <div style="color: #d4af7a; font-weight: bold; margin-bottom: 5px;">👗 Образ "Новая Я":</div>
+                            <div>${data.formData.get('goal_dream_dress') || 'не указано'}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin: 25px 0; text-align: center;">
+                    <h2 style="color: #d4af7a; font-size: 14px; margin-bottom: 15px;">⭐ ОБЩАЯ ОЦЕНКА</h2>
+                    <div style="display: inline-block; background: #d4af7a; color: white; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold;">
+                        ${data.formData.get('overall')}<span style="font-size: 16px;">/10</span>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #999; font-size: 9px;">
+                    <div style="font-size: 12px; margin-bottom: 5px;">ПЛАТЬЕ МЕЧТЫ 👗</div>
+                    <div style="font-weight: bold; color: #6b6b6b; margin-bottom: 3px;">Ольга Жаркова</div>
+                    <div style="font-size: 8px; margin-bottom: 5px;">Нутрициолог-психолог</div>
+                    <div>ol_zubova@mail.ru</div>
+                </div>
+            `;
             
-            // Заголовок
-            doc.setFontSize(18);
-            doc.setTextColor(212, 175, 122);
-            doc.text("PLATYE MECHTY", 105, y, { align: 'center' });
-            y += 10;
+            // Генерируем PDF из HTML
+            const opt = {
+                margin: 0,
+                filename: `Платье_Мечты_ДО_${data.clientCode}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
             
-            doc.setFontSize(14);
-            doc.text("Rezultaty DO programmy", 105, y, { align: 'center' });
-            y += 15;
-            
-            // Код клиента
-            doc.setFontSize(12);
-            doc.setTextColor(0, 0, 0);
-            doc.text(`Kod klienta: ${data.clientCode}`, margin, y);
-            y += 10;
-            
-            doc.setFontSize(10);
-            doc.text(`Data: ${new Date().toLocaleString('ru-RU')}`, margin, y);
-            y += 10;
-            
-            // Функция для добавления текста с переносом
-            function addText(text, fontSize = 10) {
-                doc.setFontSize(fontSize);
-                const lines = doc.splitTextToSize(text, maxWidth);
-                lines.forEach(line => {
-                    if (y > 270) {
-                        doc.addPage();
-                        y = 20;
-                    }
-                    doc.text(line, margin, y);
-                    y += lineHeight;
-                });
-            }
-            
-            // Личные данные
-            y += 5;
-            doc.setFontSize(12);
-            doc.setTextColor(212, 175, 122);
-            doc.text("LICHNYE DANNYE", margin, y);
-            doc.setTextColor(0, 0, 0);
-            y += 8;
-            
-            addText(`Imya: ${data.formData.get('name')}`);
-            addText(`Vozrast: ${data.formData.get('age')} let`);
-            y += 3;
-            
-            // Антропометрия
-            doc.setFontSize(12);
-            doc.setTextColor(212, 175, 122);
-            doc.text("ANTROPOMETRIYA", margin, y);
-            doc.setTextColor(0, 0, 0);
-            y += 8;
-            
-            addText(`Ves: ${data.formData.get('weight')} kg`);
-            addText(`Rost: ${data.formData.get('height')} sm`);
-            if (data.formData.get('chest')) addText(`Grud: ${data.formData.get('chest')} sm`);
-            if (data.formData.get('waist')) addText(`Taliya: ${data.formData.get('waist')} sm`);
-            if (data.formData.get('hips')) addText(`Bedra: ${data.formData.get('hips')} sm`);
-            y += 3;
-            
-            // Симптомы
-            doc.setFontSize(12);
-            doc.setTextColor(212, 175, 122);
-            doc.text("SIMPTOMY", margin, y);
-            doc.setTextColor(0, 0, 0);
-            y += 8;
-            
-            if (data.symptomsData.length > 0) {
-                data.symptomsData.forEach((s, i) => {
-                    addText(`${i + 1}. ${s.symptom} -> ${s.intensity}/10`);
-                });
-            } else {
-                addText("Net simptomov");
-            }
-            y += 3;
-            
-            // Привычки
-            doc.setFontSize(12);
-            doc.setTextColor(212, 175, 122);
-            doc.text("PRIVYCHKI", margin, y);
-            doc.setTextColor(0, 0, 0);
-            y += 8;
-            
-            if (data.habitsData.length > 0) {
-                data.habitsData.forEach((h, i) => {
-                    addText(`${i + 1}. ${h}`);
-                });
-            } else {
-                addText("Net privychek");
-            }
-            y += 3;
-            
-            // Цели
-            doc.setFontSize(12);
-            doc.setTextColor(212, 175, 122);
-            doc.text("CELI", margin, y);
-            doc.setTextColor(0, 0, 0);
-            y += 8;
-            
-            addText(`Fizicheskoe: ${data.formData.get('goal_physical') || 'ne ukazano'}`);
-            y += 2;
-            addText(`Emocionalnoe: ${data.formData.get('goal_emotional') || 'ne ukazano'}`);
-            y += 2;
-            addText(`Obraz "Novaya Ya": ${data.formData.get('goal_dream_dress') || 'ne ukazano'}`);
-            y += 5;
-            
-            // Общая оценка
-            doc.setFontSize(12);
-            addText(`Obshhaya ocenka: ${data.formData.get('overall')}/10`);
-            
-            // Футер
-            doc.setFontSize(8);
-            doc.setTextColor(150, 150, 150);
-            doc.text("Platye Mechty - Olga Zharkova", 105, 285, { align: 'center' });
-            
-            // Сохранение
-            doc.save(`Platye_Mechty_DO_${data.clientCode}.pdf`);
+            await html2pdf().set(opt).from(pdfContent).save();
         }
         
         // Обработчик кнопки скачивания PDF

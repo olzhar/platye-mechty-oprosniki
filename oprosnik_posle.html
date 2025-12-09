@@ -7,7 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
         // Инициализация EmailJS
         (function(){
@@ -1053,162 +1054,270 @@ ${formData.get('comments') || 'нет'}
         });
         
         // Функция генерации PDF со сравнением
-        function generatePDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+        // Функция генерации PDF со сравнением на русском
+        
+        // Функция генерации PDF со сравнением
+        async function generatePDF() {
             const data = window.surveyDataAfterForPdf;
+            const beforeData = data.beforeData;
             
-            doc.setFont("helvetica");
-            
-            let y = 20;
-            const lineHeight = 7;
-            const margin = 20;
-            const maxWidth = 170;
-            
-            // Заголовок
-            doc.setFontSize(18);
-            doc.setTextColor(123, 166, 125);
-            doc.text("PLATYE MECHTY - REZULTATY", 105, y, { align: 'center' });
-            y += 10;
-            
-            doc.setFontSize(14);
-            doc.text("SRAVNENIE DO i POSLE", 105, y, { align: 'center' });
-            y += 15;
-            
-            // Функция добавления текста
-            function addText(text, fontSize = 10) {
-                doc.setFontSize(fontSize);
-                const lines = doc.splitTextToSize(text, maxWidth);
-                lines.forEach(line => {
-                    if (y > 270) {
-                        doc.addPage();
-                        y = 20;
-                    }
-                    doc.text(line, margin, y);
-                    y += lineHeight;
-                });
-            }
-            
-            // Имя
-            doc.setFontSize(12);
-            doc.setTextColor(0, 0, 0);
-            addText(`Imya: ${data.formData.get('name')}`);
-            addText(`Data: ${new Date().toLocaleString('ru-RU')}`);
-            y += 5;
-            
-            // Сравнение антропометрии
-            doc.setFontSize(12);
-            doc.setTextColor(123, 166, 125);
-            doc.text("SRAVNENIE ANTROPOMETRII", margin, y);
-            doc.setTextColor(0, 0, 0);
-            y += 8;
-            
-            const weightBefore = data.beforeData.measurements.weight || 0;
-            const weightAfter = data.formData.get('weight') || 0;
+            // Вычисляем изменения
+            const weightBefore = beforeData.measurements.weight || 0;
+            const weightAfter = parseFloat(data.formData.get('weight')) || 0;
             const weightDiff = (weightAfter - weightBefore).toFixed(1);
             
-            addText(`Ves: ${weightBefore} kg -> ${weightAfter} kg (${weightDiff > 0 ? '+' : ''}${weightDiff} kg)`);
+            const waistBefore = beforeData.measurements.waist || 0;
+            const waistAfter = parseFloat(data.formData.get('waist')) || 0;
+            const waistDiff = waistAfter ? (waistAfter - waistBefore).toFixed(1) : null;
             
-            if (data.beforeData.measurements.waist && data.formData.get('waist')) {
-                const waistDiff = (data.formData.get('waist') - data.beforeData.measurements.waist).toFixed(1);
-                addText(`Taliya: ${data.beforeData.measurements.waist} sm -> ${data.formData.get('waist')} sm (${waistDiff > 0 ? '+' : ''}${waistDiff} sm)`);
-            }
+            const hipsBefore = beforeData.measurements.hips || 0;
+            const hipsAfter = parseFloat(data.formData.get('hips')) || 0;
+            const hipsDiff = hipsAfter ? (hipsAfter - hipsBefore).toFixed(1) : null;
             
-            if (data.beforeData.measurements.hips && data.formData.get('hips')) {
-                const hipsDiff = (data.formData.get('hips') - data.beforeData.measurements.hips).toFixed(1);
-                addText(`Bedra: ${data.beforeData.measurements.hips} sm -> ${data.formData.get('hips')} sm (${hipsDiff > 0 ? '+' : ''}${hipsDiff} sm)`);
-            }
-            y += 5;
+            const overallBefore = beforeData.goals?.overall || 0;
+            const overallAfter = parseInt(data.formData.get('overall')) || 0;
+            const overallDiff = overallAfter - overallBefore;
             
-            // Симптомы
-            doc.setFontSize(12);
-            doc.setTextColor(123, 166, 125);
-            doc.text("SIMPTOMY", margin, y);
-            doc.setTextColor(0, 0, 0);
-            y += 8;
+            // Анализ симптомов
+            const symptomsBefore = beforeData.symptoms || [];
+            const symptomsAfter = data.symptomsData || [];
             
-            // Создаём карту симптомов ДО
-            const symptomsBeforeMap = {};
-            if (data.beforeData.symptoms) {
-                data.beforeData.symptoms.forEach(s => {
-                    symptomsBeforeMap[s.symptom] = s.intensity;
-                });
-            }
+            const symptomMapBefore = {};
+            symptomsBefore.forEach(s => {
+                symptomMapBefore[s.symptom] = s.intensity;
+            });
             
-            // Сравнение симптомов
-            const improved = [];
-            const unchanged = [];
-            const worsened = [];
             const disappeared = [];
+            const decreased = [];
+            const unchanged = [];
             
-            // Проверяем симптомы ДО
-            Object.keys(symptomsBeforeMap).forEach(symptom => {
-                const beforeIntensity = symptomsBeforeMap[symptom];
-                const afterSymptom = data.symptomsData.find(s => s.symptom === symptom);
-                
+            symptomsBefore.forEach(s => {
+                const afterSymptom = symptomsAfter.find(sa => sa.symptom === s.symptom);
                 if (!afterSymptom) {
-                    disappeared.push(`${symptom} (bylo ${beforeIntensity}/10)`);
-                } else if (afterSymptom.intensity < beforeIntensity) {
-                    improved.push(`${symptom}: ${beforeIntensity}/10 -> ${afterSymptom.intensity}/10`);
-                } else if (afterSymptom.intensity === beforeIntensity) {
-                    unchanged.push(`${symptom}: ${beforeIntensity}/10`);
+                    disappeared.push({ symptom: s.symptom, before: s.intensity });
+                } else if (afterSymptom.intensity < s.intensity) {
+                    decreased.push({ symptom: s.symptom, before: s.intensity, after: afterSymptom.intensity });
                 } else {
-                    worsened.push(`${symptom}: ${beforeIntensity}/10 -> ${afterSymptom.intensity}/10`);
+                    unchanged.push({ symptom: s.symptom, intensity: afterSymptom.intensity });
                 }
             });
             
-            if (disappeared.length > 0) {
-                addText("Ischezli:");
-                disappeared.forEach(s => addText(`  - ${s}`));
-            }
-            if (improved.length > 0) {
-                addText("Uluchshilis:");
-                improved.forEach(s => addText(`  - ${s}`));
-            }
-            if (unchanged.length > 0) {
-                addText("Bez izmenenij:");
-                unchanged.forEach(s => addText(`  - ${s}`));
-            }
-            y += 5;
+            // Новые привычки
+            const habitsBefore = beforeData.habits || [];
+            const habitsAfter = data.habitsData || [];
+            const newHabits = habitsAfter.filter(h => !habitsBefore.includes(h));
             
-            // Привычки
-            doc.setFontSize(12);
-            doc.setTextColor(123, 166, 125);
-            doc.text("NOVYE PRIVYCHKI", margin, y);
-            doc.setTextColor(0, 0, 0);
-            y += 8;
+            // Создаём HTML контент
+            const pdfContent = document.createElement('div');
+            pdfContent.style.cssText = 'padding: 20px; font-family: Montserrat, Arial, sans-serif; background: white;';
             
-            const habitsBefore = data.beforeData.habits || [];
-            const newHabits = data.habitsData.filter(h => !habitsBefore.includes(h));
+            pdfContent.innerHTML = `
+                <div style="background: linear-gradient(135deg, #7ba67d 0%, #5a9f5d 100%); padding: 30px; text-align: center; color: white; margin: -20px -20px 20px -20px;">
+                    <h1 style="margin: 0; font-size: 28px; font-weight: 300; letter-spacing: 3px;">ПЛАТЬЕ МЕЧТЫ</h1>
+                    <p style="margin: 10px 0 0 0; font-size: 16px; font-weight: 500;">🎉 ПОЗДРАВЛЯЕМ! 🎉</p>
+                    <p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.95;">Результаты ПОСЛЕ программы</p>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%); padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
+                    <div style="font-size: 32px; margin-bottom: 5px;">🏆</div>
+                    <div style="font-weight: bold; color: #2c2c2c; font-size: 14px;">${data.formData.get('name')}, вы завершили программу!</div>
+                </div>
+                
+                <div style="margin: 25px 0;">
+                    <h2 style="color: #7ba67d; font-size: 14px; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; margin-bottom: 12px;">
+                        📊 СРАВНЕНИЕ АНТРОПОМЕТРИИ
+                    </h2>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 9px; margin-bottom: 8px; font-weight: bold; color: #6b6b6b; text-align: center;">
+                        <div>ДО</div>
+                        <div>ПОСЛЕ</div>
+                        <div>ИЗМЕНЕНИЕ</div>
+                    </div>
+                    
+                    <div style="background: #f1f8f1; padding: 12px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #7ba67d;">
+                        <div style="font-size: 10px; color: #6b6b6b; margin-bottom: 5px;">ВЕС</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 12px; font-weight: bold;">
+                            <div>${weightBefore} кг</div>
+                            <div style="color: #7ba67d;">${weightAfter} кг</div>
+                            <div style="color: ${weightDiff < 0 ? '#7ba67d' : '#c1272d'};">
+                                ${weightDiff > 0 ? '+' : ''}${weightDiff} кг
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${waistDiff ? `
+                    <div style="background: #f1f8f1; padding: 12px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #7ba67d;">
+                        <div style="font-size: 10px; color: #6b6b6b; margin-bottom: 5px;">ТАЛИЯ</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 12px; font-weight: bold;">
+                            <div>${waistBefore} см</div>
+                            <div style="color: #7ba67d;">${waistAfter} см</div>
+                            <div style="color: ${waistDiff < 0 ? '#7ba67d' : '#c1272d'};">
+                                ${waistDiff > 0 ? '+' : ''}${waistDiff} см
+                            </div>
+                        </div>
+                    </div>` : ''}
+                    
+                    ${hipsDiff ? `
+                    <div style="background: #f1f8f1; padding: 12px; border-radius: 6px; border-left: 3px solid #7ba67d;">
+                        <div style="font-size: 10px; color: #6b6b6b; margin-bottom: 5px;">БЁДРА</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 12px; font-weight: bold;">
+                            <div>${hipsBefore} см</div>
+                            <div style="color: #7ba67d;">${hipsAfter} см</div>
+                            <div style="color: ${hipsDiff < 0 ? '#7ba67d' : '#c1272d'};">
+                                ${hipsDiff > 0 ? '+' : ''}${hipsDiff} см
+                            </div>
+                        </div>
+                    </div>` : ''}
+                </div>
+                
+                <div style="margin: 25px 0;">
+                    <h2 style="color: #7ba67d; font-size: 14px; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; margin-bottom: 12px;">
+                        🩺 ДИНАМИКА СИМПТОМОВ
+                    </h2>
+                    
+                    ${disappeared.length > 0 ? `
+                        <div style="margin-bottom: 15px;">
+                            <div style="color: #7ba67d; font-weight: bold; font-size: 11px; margin-bottom: 8px;">✅ ИСЧЕЗЛИ:</div>
+                            ${disappeared.map(s => `
+                                <div style="background: #e8f5e9; padding: 8px; margin-bottom: 4px; border-radius: 4px; font-size: 10px; border-left: 3px solid #7ba67d;">
+                                    ${s.symptom} <span style="color: #6b6b6b;">(было ${s.before}/10)</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    ${decreased.length > 0 ? `
+                        <div style="margin-bottom: 15px;">
+                            <div style="color: #ffc107; font-weight: bold; font-size: 11px; margin-bottom: 8px;">↓ УМЕНЬШИЛИСЬ:</div>
+                            ${decreased.map(s => `
+                                <div style="background: #fff9e6; padding: 8px; margin-bottom: 4px; border-radius: 4px; font-size: 10px; border-left: 3px solid #ffc107;">
+                                    ${s.symptom}: ${s.before}/10 → ${s.after}/10
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    ${unchanged.length > 0 ? `
+                        <div>
+                            <div style="color: #6b6b6b; font-weight: bold; font-size: 11px; margin-bottom: 8px;">📊 ОСТАЛИСЬ:</div>
+                            ${unchanged.map(s => `
+                                <div style="background: #f5f5f5; padding: 8px; margin-bottom: 4px; border-radius: 4px; font-size: 10px; border-left: 3px solid #e0e0e0;">
+                                    ${s.symptom} (${s.intensity}/10)
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    ${disappeared.length === 0 && decreased.length === 0 && unchanged.length === 0 ? 
+                        '<div style="color: #6b6b6b; font-size: 10px;">Симптомы не отмечены</div>' : ''}
+                </div>
+                
+                ${newHabits.length > 0 ? `
+                <div style="margin: 25px 0;">
+                    <h2 style="color: #7ba67d; font-size: 14px; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; margin-bottom: 12px;">
+                        ✨ НОВЫЕ ПРИВЫЧКИ
+                    </h2>
+                    ${newHabits.map((h, i) => `
+                        <div style="padding: 5px 0; font-size: 10px; color: #2c2c2c;">
+                            <span style="color: #7ba67d; font-weight: bold;">✓</span> ${i + 1}. ${h}
+                        </div>
+                    `).join('')}
+                </div>
+                ` : ''}
+                
+                <div style="margin: 25px 0; text-align: center;">
+                    <h2 style="color: #7ba67d; font-size: 14px; margin-bottom: 15px;">⭐ ОБЩАЯ ОЦЕНКА</h2>
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 20px;">
+                        <div>
+                            <div style="color: #6b6b6b; font-size: 9px; margin-bottom: 5px;">ДО</div>
+                            <div style="display: inline-block; background: #c17b6f; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold;">
+                                ${overallBefore}
+                            </div>
+                        </div>
+                        <div style="font-size: 24px; color: #7ba67d;">→</div>
+                        <div>
+                            <div style="color: #6b6b6b; font-size: 9px; margin-bottom: 5px;">ПОСЛЕ</div>
+                            <div style="display: inline-block; background: #7ba67d; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold;">
+                                ${overallAfter}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; color: #7ba67d; font-size: 13px; font-weight: bold;">
+                        Улучшение на ${overallDiff > 0 ? '+' : ''}${overallDiff} ${overallDiff === 1 ? 'балл' : overallDiff < 5 ? 'балла' : 'баллов'}! 🎉
+                    </div>
+                </div>
+                
+                <div style="margin-top: 40px; padding: 25px; background: linear-gradient(135deg, #f5e6d3 0%, #fdf8f0 100%); border-radius: 12px; border: 2px solid #d4af7a;">
+                    <div style="text-align: center; font-size: 20px; color: #d4af7a; margin-bottom: 15px;">
+                        🏆 КАКАЯ ВЫ УМНИЦА!
+                    </div>
+                    
+                    <div style="font-size: 11px; line-height: 1.8; color: #2c2c2c; margin-bottom: 15px;">
+                        <p style="margin: 0 0 10px 0;">Посмотрите на свои результаты – это ваш труд и ваша победа!</p>
+                        
+                        <p style="margin: 0 0 10px 0;">Вы уже заложили основы для преображения. Новая реальность – это следствие новой личности, которая рождается изнутри.</p>
+                        
+                        <p style="margin: 0 0 15px 0;">Если вы чувствуете, что готовы продолжить путь к Новой Я, то буду рада помочь вам системно выстроить этот процесс:</p>
+                    </div>
+                    
+                    <div style="font-size: 10px; line-height: 1.6; color: #2c2c2c; margin-bottom: 15px;">
+                        <div style="margin-bottom: 8px;">
+                            <span style="color: #d4af7a; font-size: 14px;">💫</span> 
+                            <strong>Питание</strong> – которое вкусно, полезно и дает энергию
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <span style="color: #d4af7a; font-size: 14px;">💫</span> 
+                            <strong>Оздоровление</strong> – восстановление базовых здоровых настроек организма
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <span style="color: #d4af7a; font-size: 14px;">💫</span> 
+                            <strong>Психика</strong> – работа с внутренними установками и образом себя через психологические консультации и АромаМАКдиагностику
+                        </div>
+                    </div>
+                    
+                    <div style="font-size: 11px; line-height: 1.8; color: #2c2c2c; margin-bottom: 15px;">
+                        <p style="margin: 0 0 10px 0;">Когда эти три составляющие работают вместе, меняется не только тело и мышление, но и вся жизнь.</p>
+                        
+                        <p style="margin: 0; background: #7ba67d; color: white; padding: 10px; border-radius: 6px; text-align: center; font-weight: bold;">
+                            Для вас специальная скидка 20% на консультацию – как благодарность за доверие и вашу готовность меняться.
+                        </p>
+                    </div>
+                    
+                    <div style="border-top: 2px solid #d4af7a; padding-top: 15px; margin-top: 15px; text-align: center;">
+                        <div style="font-size: 11px; color: #7ba67d; font-weight: bold; margin-bottom: 10px;">
+                            С любовью и верой в вас! 💚
+                        </div>
+                        
+                        <div style="font-size: 12px; color: #d4af7a; font-weight: bold; margin-bottom: 8px;">
+                            ПЛАТЬЕ МЕЧТЫ 👗
+                        </div>
+                        <div style="font-size: 11px; color: #2c2c2c; font-weight: bold; margin-bottom: 8px;">
+                            Ольга Жаркова
+                        </div>
+                        <div style="font-size: 10px; color: #6b6b6b; margin-bottom: 3px;">
+                            Нутрициолог-психолог
+                        </div>
+                        <div style="font-size: 10px; color: #2c2c2c; margin-bottom: 3px;">
+                            📞 +7-903-756-22-33
+                        </div>
+                        <div style="font-size: 10px; margin-top: 5px;">
+                            <a href="https://t.me/olga_zharkova_health" style="color: #2c2c2c; text-decoration: none;">
+                                📱 t.me/olga_zharkova_health
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
             
-            if (newHabits.length > 0) {
-                newHabits.forEach((h, i) => addText(`${i + 1}. ${h}`));
-            } else {
-                addText("Net novyh privychek");
-            }
-            y += 5;
+            // Генерируем PDF
+            const opt = {
+                margin: 0,
+                filename: `Платье_Мечты_СРАВНЕНИЕ_${data.clientCode}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
             
-            // Оценка
-            doc.setFontSize(12);
-            doc.setTextColor(123, 166, 125);
-            doc.text("OBSHHAYA OCENKA", margin, y);
-            doc.setTextColor(0, 0, 0);
-            y += 8;
-            
-            const overallBefore = data.beforeData.goals?.overall || 0;
-            const overallAfter = data.formData.get('overall') || 0;
-            const improvement = overallAfter - overallBefore;
-            
-            addText(`DO: ${overallBefore}/10`);
-            addText(`POSLE: ${overallAfter}/10`);
-            addText(`Uluchshenie: ${improvement > 0 ? '+' : ''}${improvement} ballov`);
-            
-            // Футер
-            doc.setFontSize(8);
-            doc.setTextColor(150, 150, 150);
-            doc.text("Platye Mechty - Olga Zharkova", 105, 285, { align: 'center' });
-            
-            doc.save(`Platye_Mechty_SRAVNENIE_${data.clientCode}.pdf`);
+            await html2pdf().set(opt).from(pdfContent).save();
         }
         
         // Обработчик кнопки
