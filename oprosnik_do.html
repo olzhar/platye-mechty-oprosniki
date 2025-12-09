@@ -375,70 +375,6 @@
             flex: 1;
         }
 
-        .habit-row {
-            background: var(--bg-light);
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 12px;
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .habit-row:hover {
-            border-color: var(--primary);
-            box-shadow: 0 4px 12px rgba(212, 175, 122, 0.1);
-        }
-
-        .habit-text {
-            font-size: 1em;
-            margin-bottom: 12px;
-            color: var(--text);
-            font-weight: 500;
-        }
-
-        .habit-options {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .habit-option {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            padding: 8px 15px;
-            border-radius: 8px;
-            background: white;
-            border: 2px solid var(--border);
-            transition: all 0.3s ease;
-            flex: 1;
-            min-width: 140px;
-        }
-
-        .habit-option:hover {
-            border-color: var(--primary);
-            background: #fef9f4;
-        }
-
-        .habit-option input[type="radio"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            accent-color: var(--red-dress);
-        }
-
-        .habit-option span {
-            font-size: 0.95em;
-            color: var(--text);
-        }
-
-        .habit-option input[type="radio"]:checked + span {
-            font-weight: 600;
-            color: var(--red-dress);
-        }
-
-
         .submit-btn {
             background: linear-gradient(135deg, var(--red-dress) 0%, #a01f24 100%);
             color: white;
@@ -572,19 +508,6 @@
                 min-width: 80px;
                 font-size: 0.75em;
             }
-
-            .habit-options {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .habit-option {
-                min-width: 100%;
-            }
-
-            .habit-text {
-                font-size: 0.95em;
-            }
         }
 
         .loader {
@@ -681,10 +604,7 @@
                 <!-- Привычки и практики -->
                 <div class="section">
                     <h2 class="section-title">Оценка привычек и практик</h2>
-                    <p class="info-text" style="margin-bottom: 20px;">
-                        <strong>Выберите:</strong> какие привычки <span style="color: var(--red-dress);">уже есть</span> и 
-                        2-3 привычки, над которыми <span style="color: #7ba67d);">будете работать</span> в ближайшее время.
-                    </p>
+                    <p class="info-text" style="margin-bottom: 20px;">Отметьте утверждения, которые соответствуют вашему текущему состоянию</p>
                     
                     <div id="habitsContainer"></div>
                 </div>
@@ -724,18 +644,6 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="chronic_conditions" style="font-weight: 600;">
-                            ⚠️ ВАЖНО! Хронические состояния и особенности *
-                        </label>
-                        <p style="font-size: 0.9em; color: #666; margin: 8px 0 12px 0;">
-                            Напишите ваши хронические состояния и особенности (например: удалён желчный пузырь, камни в жёлчном/почках, хронические запоры, СРК, СИБР, СИГР, непереносимость определённых продуктов и др.)
-                        </p>
-                        <textarea id="chronic_conditions" name="chronic_conditions" required 
-                                  placeholder="Опишите ваши хронические состояния, особенности здоровья, непереносимости..." 
-                                  style="min-height: 100px;"></textarea>
-                    </div>
-                    
-                    <div class="form-group">
                         <label for="comments">Дополнительные комментарии</label>
                         <textarea id="comments" name="comments"></textarea>
                     </div>
@@ -751,6 +659,11 @@
                     <strong id="clientCode"></strong>
                     <div style="font-size: 0.9em; margin-top: 15px; opacity: 0.9;">
                         ⚠️ Сохраните этот код! Он понадобится после прохождения программы для сравнения результатов.
+                    </div>
+                    <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 0.9em; line-height: 1.7; border-left: 4px solid #4caf50;">
+                        <div style="font-weight: 600; margin-bottom: 8px; color: #2e7d32;">📱 Как сохранить результаты:</div>
+                        <div style="margin-bottom: 5px;">💻 <strong>Компьютер:</strong> Нажмите кнопку ниже → выберите "Сохранить как PDF"</div>
+                        <div>📱 <strong>Телефон:</strong> Нажмите кнопку ниже → сделайте скриншот экрана</div>
                     </div>
                     <button id="downloadPdfBtn" style="margin-top: 25px; background: #d4af7a; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
                         📄 Скачать результаты в PDF
@@ -824,8 +737,7 @@
             "Регулярно проветриваю помещение",
             "Ем не позднее, чем за 3 часа до сна",
             "Включаю в рацион ферментированные продукты",
-            "Ограничиваю потребление кофеина (1-2 чашки кофе в день без молока и сахара, например, с лимоном)",
-            "Качественно пережёвываю пищу (от 60 раз каждый кусочек)",
+            "Ограничиваю потребление кофеина (1-2 чашки в день)",
             "Веду дневник питания или эмоций",
             "Практикую благодарность (записываю или проговариваю)",
             "Использую ароматерапию для поддержки состояния",
@@ -848,7 +760,7 @@
                 </div>
                 <div class="slider-container" id="slider-${index}">
                     <div class="slider-wrapper">
-                        <span class="slider-label">Выраженность: <small style="color: #999;">(1 = минимальная, 10 = максимальная)</small></span>
+                        <span class="slider-label">Выраженность:</span>
                         <input type="range" class="symptom-slider" data-symptom="${index}" min="1" max="10" value="5" disabled>
                         <span class="slider-value">5</span>
                     </div>
@@ -858,27 +770,14 @@
             symptomsContainer.appendChild(div);
         });
 
-        // Генерация привычек с двумя столбцами
+        // Генерация привычек
         const habitsContainer = document.getElementById('habitsContainer');
         habits.forEach((habit, index) => {
             const div = document.createElement('div');
-            div.className = 'habit-row';
+            div.className = 'checkbox-item';
             div.innerHTML = `
-                <div class="habit-text">${habit}</div>
-                <div class="habit-options">
-                    <label class="habit-option">
-                        <input type="radio" name="habit_${index}" value="already" class="habit-radio" data-text="${habit}">
-                        <span>Привычка уже есть</span>
-                    </label>
-                    <label class="habit-option">
-                        <input type="radio" name="habit_${index}" value="want" class="habit-radio" data-text="${habit}">
-                        <span>Хочу сформировать</span>
-                    </label>
-                    <label class="habit-option">
-                        <input type="radio" name="habit_${index}" value="no" class="habit-radio" checked>
-                        <span>Не актуально</span>
-                    </label>
-                </div>
+                <input type="checkbox" class="habit-checkbox" id="habit_${index}" data-text="${habit}">
+                <label for="habit_${index}">${habit}</label>
             `;
             habitsContainer.appendChild(div);
         });
@@ -969,34 +868,13 @@
             if (symptomsData.length === 0) symptomsText += 'Симптомы не отмечены\n';
             
             // Собираем данные о привычках
-            let habitsAlready = [];
-            let habitsWant = [];
-            let habitsText = '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n✅ ПРИВЫЧКИ (УЖЕ ЕСТЬ):\n';
-            
-            document.querySelectorAll('.habit-radio:checked').forEach(radio => {
-                if (radio.value === 'already') {
-                    habitsAlready.push(radio.dataset.text);
-                } else if (radio.value === 'want') {
-                    habitsWant.push(radio.dataset.text);
-                }
+            let habitsData = [];
+            let habitsText = '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nПРИВЫЧКИ ДО:\n';
+            document.querySelectorAll('.habit-checkbox:checked').forEach(checkbox => {
+                habitsData.push(checkbox.dataset.text);
+                habitsText += `${habitsData.length}. ${checkbox.dataset.text}\n`;
             });
-            
-            if (habitsAlready.length > 0) {
-                habitsAlready.forEach((h, i) => {
-                    habitsText += `   ${i + 1}. ${h}\n`;
-                });
-            } else {
-                habitsText += 'Нет сформированных привычек\n';
-            }
-            
-            habitsText += '\n💫 ХОЧУ СФОРМИРОВАТЬ:\n';
-            if (habitsWant.length > 0) {
-                habitsWant.forEach((h, i) => {
-                    habitsText += `   ${i + 1}. ${h}\n`;
-                });
-            } else {
-                habitsText += 'Не указано\n';
-            }
+            if (habitsData.length === 0) habitsText += 'Привычки не отмечены\n';
             
             // Формируем полное сообщение
             const fullMessage = `
@@ -1039,9 +917,6 @@ ${formData.get('expectations') || 'не указаны'}
 
 Общая оценка ДО: ${formData.get('overall')}/10
 
-⚠️ ХРОНИЧЕСКИЕ СОСТОЯНИЯ И ОСОБЕННОСТИ:
-${formData.get('chronic_conditions') || 'не указаны'}
-
 Комментарии:
 ${formData.get('comments') || 'нет'}
 
@@ -1069,15 +944,13 @@ ${formData.get('comments') || 'нет'}
                     hips: formData.get('hips')
                 },
                 symptoms: symptomsData,
-                habitsAlready: habitsAlready,
-                habitsWant: habitsWant,
+                habits: habitsData,
                 goals: {
                     goal_physical: formData.get('goal_physical'),
                     goal_emotional: formData.get('goal_emotional'),
                     goal_dream_dress: formData.get('goal_dream_dress'),
                     expectations: formData.get('expectations'),
                     overall: formData.get('overall'),
-                    chronic_conditions: formData.get('chronic_conditions'),
                     comments: formData.get('comments')
                 }
             };
@@ -1106,165 +979,263 @@ ${formData.get('comments') || 'нет'}
         // Функция генерации PDF с html2pdf
         
         // Функция генерации PDF через печать
-        async function generatePDF() {
+        function generatePDF() {
             const data = window.surveyDataForPdf;
-            const { jsPDF } = window.jspdf;
             
-            // Показываем загрузку
-            const loader = document.createElement('div');
-            loader.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 10000; text-align: center;';
-            loader.innerHTML = '<div style="font-size: 18px; color: #d4af7a; margin-bottom: 15px;">📄 Создаём ваш PDF...</div><div style="width: 40px; height: 40px; margin: 0 auto; border: 4px solid #f3f3f3; border-top: 4px solid #d4af7a; border-radius: 50%; animation: spin 1s linear infinite;"></div><style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>';
-            document.body.appendChild(loader);
-            
-            try {
-                // Создаём временный контейнер с содержимым
-                const container = document.createElement('div');
-                container.style.cssText = 'position: absolute; left: -9999px; width: 800px; background: white; padding: 40px; font-family: Arial, sans-serif;';
-                
-                // Формируем HTML с большими шрифтами
-                let symptomsHtml = '';
-                if (data.symptomsData && data.symptomsData.length > 0) {
-                    symptomsHtml = '<div style="margin: 25px 0;"><h3 style="font-size: 18px; color: #d4af7a; margin-bottom: 15px;">🩺 СИМПТОМЫ</h3>';
-                    data.symptomsData.forEach(s => {
-                        symptomsHtml += `<div style="background: #f9f9f9; padding: 12px; margin: 8px 0; border-radius: 8px; font-size: 15px;"><strong>${s.symptom}</strong>: ${s.intensity}/10</div>`;
-                    });
-                    symptomsHtml += '</div>';
-                }
-                
-                let habitsAlreadyHtml = '';
-                let habitsWantHtml = '';
-                
-                if (data.habitsData && data.habitsData.habitsAlready && data.habitsData.habitsAlready.length > 0) {
-                    habitsAlreadyHtml = '<div style="margin: 25px 0;"><h3 style="font-size: 18px; color: #7ba67d; margin-bottom: 15px;">✅ ПРИВЫЧКИ (УЖЕ ЕСТЬ)</h3>';
-                    data.habitsData.habitsAlready.forEach((h, i) => {
-                        habitsAlreadyHtml += `<div style="background: #f0f8f0; padding: 10px; margin: 6px 0; border-radius: 6px; font-size: 14px;">${i + 1}. ${h}</div>`;
-                    });
-                    habitsAlreadyHtml += '</div>';
-                }
-                
-                if (data.habitsData && data.habitsData.habitsWant && data.habitsData.habitsWant.length > 0) {
-                    habitsWantHtml = '<div style="margin: 25px 0;"><h3 style="font-size: 18px; color: #d4af7a; margin-bottom: 15px;">💫 ХОЧУ СФОРМИРОВАТЬ</h3>';
-                    data.habitsData.habitsWant.forEach((h, i) => {
-                        habitsWantHtml += `<div style="background: #fef9f4; padding: 10px; margin: 6px 0; border-radius: 6px; font-size: 14px;">${i + 1}. ${h}</div>`;
-                    });
-                    habitsWantHtml += '</div>';
-                }
-                
-                container.innerHTML = `
-                    <div style="background: linear-gradient(135deg, #e8b4bc 0%, #d4af7a 100%); padding: 30px; text-align: center; color: white; border-radius: 15px; margin-bottom: 30px;">
-                        <h1 style="margin: 0; font-size: 32px; letter-spacing: 3px; font-weight: 300;">ПЛАТЬЕ МЕЧТЫ</h1>
-                        <p style="margin: 10px 0 0 0; font-size: 16px;">Результаты ДО прохождения программы</p>
-                    </div>
-                    
-                    <div style="background: linear-gradient(135deg, #fff9e6 0%, #ffe8cc 100%); padding: 25px; border-radius: 12px; border: 3px solid #d4af7a; margin-bottom: 30px; text-align: center;">
-                        <div style="font-size: 14px; color: #8b6f47; margin-bottom: 8px;">КОД КЛИЕНТА:</div>
-                        <div style="font-size: 36px; font-weight: bold; color: #d4af7a; letter-spacing: 4px;">${data.clientCode}</div>
-                        <div style="font-size: 13px; color: #999; margin-top: 8px;">Дата: ${new Date().toLocaleDateString('ru-RU')}</div>
-                    </div>
-                    
-                    <div style="margin: 25px 0;">
-                        <h3 style="font-size: 18px; color: #d4af7a; margin-bottom: 15px;">👤 ЛИЧНЫЕ ДАННЫЕ</h3>
-                        <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; font-size: 15px; line-height: 1.8;">
-                            <div><strong>Имя:</strong> ${data.formData.get('name')}</div>
-                            <div><strong>Возраст:</strong> ${data.formData.get('age')} лет</div>
-                        </div>
-                    </div>
-                    
-                    <div style="margin: 25px 0;">
-                        <h3 style="font-size: 18px; color: #d4af7a; margin-bottom: 15px;">📏 АНТРОПОМЕТРИЯ</h3>
-                        <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; font-size: 15px; line-height: 1.8;">
-                            <div><strong>Вес:</strong> ${data.formData.get('weight')} кг</div>
-                            <div><strong>Рост:</strong> ${data.formData.get('height')} см</div>
-                            <div><strong>Грудь:</strong> ${data.formData.get('chest') || 'не указано'} см</div>
-                            <div><strong>Талия:</strong> ${data.formData.get('waist') || 'не указано'} см</div>
-                            <div><strong>Бёдра:</strong> ${data.formData.get('hips') || 'не указано'} см</div>
-                        </div>
-                    </div>
-                    
-                    ${symptomsHtml}
-                    ${habitsAlreadyHtml}
-                    ${habitsWantHtml}
-                    
-                    <div style="margin: 25px 0;">
-                        <h3 style="font-size: 18px; color: #d4af7a; margin-bottom: 15px;">🎯 ЦЕЛИ</h3>
-                        <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; font-size: 14px; line-height: 1.8;">
-                            <div style="margin-bottom: 12px;"><strong style="color: #d4af7a;">Физическое здоровье:</strong><br>${data.formData.get('goal_physical') || 'не указана'}</div>
-                            <div style="margin-bottom: 12px;"><strong style="color: #7ba67d;">Эмоциональное здоровье:</strong><br>${data.formData.get('goal_emotional') || 'не указана'}</div>
-                            <div><strong style="color: #c2476b;">Образ "Новая Я":</strong><br>${data.formData.get('goal_dream_dress') || 'не указан'}</div>
-                        </div>
-                    </div>
-                    
-                    <div style="margin: 25px 0;">
-                        <h3 style="font-size: 18px; color: #ff9800; margin-bottom: 15px;">⚠️ ХРОНИЧЕСКИЕ СОСТОЯНИЯ</h3>
-                        <div style="background: #fff3e0; padding: 15px; border-radius: 8px; border-left: 4px solid #ff9800; font-size: 14px; line-height: 1.7;">
-                            ${data.formData.get('chronic_conditions') || 'не указаны'}
-                        </div>
-                    </div>
-                    
-                    <div style="text-align: center; margin: 30px 0;">
-                        <h3 style="font-size: 18px; color: #d4af7a; margin-bottom: 15px;">⭐ ОБЩАЯ ОЦЕНКА</h3>
-                        <div style="display: inline-block; background: linear-gradient(135deg, #d4af7a 0%, #c2476b 100%); color: white; padding: 20px 40px; border-radius: 50px; font-size: 42px; font-weight: bold;">
-                            ${data.formData.get('overall')}<span style="font-size: 24px;">/10</span>
-                        </div>
-                    </div>
-                    
-                    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e0e0e0; font-size: 13px; color: #666;">
-                        <div style="font-weight: bold; color: #d4af7a; margin-bottom: 5px;">ПЛАТЬЕ МЕЧТЫ 👗</div>
-                        <div style="font-weight: bold; margin-bottom: 3px;">Ольга Жаркова</div>
-                        <div style="font-size: 11px; margin-bottom: 8px;">Нутрициолог-психолог</div>
-                        <div style="font-size: 12px;">📱 t.me/olga_zharkova_health</div>
-                    </div>
-                `;
-                
-                document.body.appendChild(container);
-                
-                // Захватываем содержимое с помощью html2canvas
-                const canvas = await html2canvas(container, {
-                    scale: 2,
-                    useCORS: true,
-                    logging: false,
-                    backgroundColor: '#ffffff'
-                });
-                
-                // Создаём PDF
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF({
-                    orientation: 'portrait',
-                    unit: 'mm',
-                    format: 'a4'
-                });
-                
-                const imgWidth = 210; // A4 width in mm
-                const pageHeight = 297; // A4 height in mm
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                let heightLeft = imgHeight;
-                let position = 0;
-                
-                // Добавляем первую страницу
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
-                
-                // Добавляем дополнительные страницы если нужно
-                while (heightLeft > 0) {
-                    position = heightLeft - imgHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-                }
-                
-                // Скачиваем PDF
-                pdf.save(`Платье_Мечты_ДО_${data.clientCode}.pdf`);
-                
-                // Удаляем временный контейнер
-                document.body.removeChild(container);
-                document.body.removeChild(loader);
-                
-            } catch (error) {
-                console.error('Ошибка создания PDF:', error);
-                document.body.removeChild(loader);
-                alert('Ошибка при создании PDF. Попробуйте ещё раз или обратитесь в поддержку.');
+            // Создаём HTML контент для печати
+            const printContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Платье Мечты - Результаты ДО</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        @media print {
+            @page { margin: 0; }
+            body { 
+                margin: 0; 
+                padding: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .header, .code-box, .footer {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
         }
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: white;
+        }
+        .header {
+            background: linear-gradient(135deg, #e8b4bc 0%, #d4af7a 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+            margin: -20px -20px 20px -20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 36px;
+            font-weight: 300;
+            letter-spacing: 3px;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 18px;
+            opacity: 0.95;
+        }
+        .code-box {
+            background: #f5e6d3;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .code-label {
+            color: #d4af7a;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .code-value {
+            color: #d4af7a;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .section {
+            margin: 25px 0;
+        }
+        .section-title {
+            color: #d4af7a;
+            font-size: 18px;
+            border-bottom: 2px solid #f5e6d3;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+        .measurement-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 10px 0;
+            font-size: 15px;
+        }
+        .measurement-card {
+            background: #fdfbf7;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        .symptom-item {
+            background: #fdfbf7;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        .symptom-badge {
+            background: #d4af7a;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        .habit-item {
+            padding: 6px 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .goal-box {
+            background: #f5e6d3;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border-left: 3px solid #d4af7a;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+        .overall-badge {
+            display: inline-block;
+            background: #d4af7a;
+            color: white;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            font-weight: bold;
+            margin: 20px auto;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ПЛАТЬЕ МЕЧТЫ</h1>
+        <p>Результаты ДО прохождения программы</p>
+        <div style="font-size: 24px; margin-top: 10px;">👗</div>
+    </div>
+    
+    <div class="code-box">
+        <div class="code-label">КОД КЛИЕНТА:</div>
+        <div class="code-value">${data.clientCode}</div>
+        <div style="color: #6b6b6b; font-size: 9px; margin-top: 5px;">Дата: ${new Date().toLocaleDateString('ru-RU')}</div>
+    </div>
+    
+    <div class="section">
+        <h2 class="section-title">👤 ЛИЧНЫЕ ДАННЫЕ</h2>
+        <div style="font-size: 11px; line-height: 1.6;">
+            <div><strong>Имя:</strong> ${data.formData.get('name')}</div>
+            <div><strong>Возраст:</strong> ${data.formData.get('age')} лет</div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2 class="section-title">📏 АНТРОПОМЕТРИЯ</h2>
+        <div class="measurement-grid">
+            <div class="measurement-card">
+                <div style="color: #6b6b6b; font-size: 9px;">Вес</div>
+                <div style="color: #d4af7a; font-size: 16px; font-weight: bold;">${data.formData.get('weight')} кг</div>
+            </div>
+            <div class="measurement-card">
+                <div style="color: #6b6b6b; font-size: 9px;">Рост</div>
+                <div style="color: #d4af7a; font-size: 16px; font-weight: bold;">${data.formData.get('height')} см</div>
+            </div>
+            ${data.formData.get('chest') ? `
+            <div class="measurement-card">
+                <div style="color: #6b6b6b; font-size: 9px;">Грудь</div>
+                <div style="color: #d4af7a; font-size: 16px; font-weight: bold;">${data.formData.get('chest')} см</div>
+            </div>` : ''}
+            ${data.formData.get('waist') ? `
+            <div class="measurement-card">
+                <div style="color: #6b6b6b; font-size: 9px;">Талия</div>
+                <div style="color: #d4af7a; font-size: 16px; font-weight: bold;">${data.formData.get('waist')} см</div>
+            </div>` : ''}
+            ${data.formData.get('hips') ? `
+            <div class="measurement-card">
+                <div style="color: #6b6b6b; font-size: 9px;">Бёдра</div>
+                <div style="color: #d4af7a; font-size: 16px; font-weight: bold;">${data.formData.get('hips')} см</div>
+            </div>` : ''}
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2 class="section-title">🩺 СИМПТОМЫ</h2>
+        ${data.symptomsData.length > 0 ? data.symptomsData.map((s, i) => `
+            <div class="symptom-item">
+                <div style="flex: 1; font-size: 10px;">${i + 1}. ${s.symptom}</div>
+                <div class="symptom-badge">${s.intensity}/10</div>
+            </div>
+        `).join('') : '<div style="color: #6b6b6b; font-size: 10px;">Симптомы не отмечены</div>'}
+    </div>
+    
+    <div class="section">
+        <h2 style="color: #7ba67d; font-size: 14px; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; margin-bottom: 12px;">✨ ПРИВЫЧКИ</h2>
+        ${data.habitsData.length > 0 ? data.habitsData.map((h, i) => `
+            <div class="habit-item">
+                <span style="color: #7ba67d; font-weight: bold;">✓</span> ${i + 1}. ${h}
+            </div>
+        `).join('') : '<div style="color: #6b6b6b; font-size: 10px;">Привычки не отмечены</div>'}
+    </div>
+    
+    <div class="section">
+        <h2 class="section-title">🎯 ЦЕЛИ И ОЖИДАНИЯ</h2>
+        <div style="font-size: 10px; line-height: 1.6;">
+            <div class="goal-box">
+                <div style="color: #d4af7a; font-weight: bold; margin-bottom: 5px; font-size: 11px;">💪 Физическое здоровье:</div>
+                <div>${data.formData.get('goal_physical') || 'не указано'}</div>
+            </div>
+            <div class="goal-box">
+                <div style="color: #d4af7a; font-weight: bold; margin-bottom: 5px; font-size: 11px;">💚 Эмоциональное здоровье:</div>
+                <div>${data.formData.get('goal_emotional') || 'не указано'}</div>
+            </div>
+            <div class="goal-box">
+                <div style="color: #d4af7a; font-weight: bold; margin-bottom: 5px; font-size: 11px;">👗 Образ "Новая Я":</div>
+                <div>${data.formData.get('goal_dream_dress') || 'не указано'}</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section" style="text-align: center;">
+        <h2 class="section-title" style="text-align: center;">⭐ ОБЩАЯ ОЦЕНКА</h2>
+        <div class="overall-badge">
+            ${data.formData.get('overall')}<span style="font-size: 16px;">/10</span>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <div style="font-size: 12px; margin-bottom: 5px; font-weight: bold; color: #6b6b6b;">ПЛАТЬЕ МЕЧТЫ 👗</div>
+        <div style="font-weight: bold; color: #6b6b6b; margin-bottom: 3px;">Ольга Жаркова</div>
+        <div style="font-size: 8px; margin-bottom: 8px;">Нутрициолог-психолог</div>
+        <div style="font-size: 10px; margin-top: 5px;">
+            📱 <a href="https://t.me/olga_zharkova_health" target="_blank" style="color: #6b6b6b; text-decoration: none;">t.me/olga_zharkova_health</a>
+        </div>
+    </div>
+</body>
+</html>
+            `;
+            
+            // Открываем новое окно
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            
+            // Ждём загрузки и открываем диалог печати
+            printWindow.onload = function() {
                 setTimeout(() => {
                     printWindow.print();
                 }, 250);
