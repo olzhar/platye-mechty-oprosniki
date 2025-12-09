@@ -756,10 +756,10 @@
                     </div>
                     <div style="padding: 15px 0; margin-top: 20px; font-size: 0.95em; line-height: 1.8;">
                         <div style="font-weight: 700; margin-bottom: 12px; font-size: 1.05em; color: #2c2c2c;">📱 Как сохранить результаты:</div>
-                        <div style="margin-bottom: 8px; color: #0066cc;"><strong>💻 Компьютер:</strong> Нажмите кнопку → выберите "Сохранить как PDF"</div>
-                        <div style="color: #ff6600;"><strong>📱 Телефон:</strong> Нажмите кнопку → сделайте скриншот экрана</div>
+                        <div style="margin-bottom: 8px; color: #0066cc;"><strong>💻 Компьютер:</strong> Нажмите "Получить результаты" → выберите "Сохранить как PDF"</div>
+                        <div style="color: #d4af37;"><strong>📱 Телефон:</strong> Нажмите "Получить результаты" → сделайте скриншот экрана</div>
                     </div>
-                    <button id="downloadPdfBtn" style="margin-top: 25px; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); color: white; border: none; padding: 18px 40px; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4); text-transform: uppercase; letter-spacing: 0.5px;">
+                    <button id="downloadPdfBtn" style="margin-top: 25px; background: linear-gradient(135deg, #f2a687 0%, #e9967a 100%); color: white; border: none; padding: 18px 40px; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 6px 20px rgba(242, 166, 135, 0.4); text-transform: uppercase; letter-spacing: 0.5px;">
                         ⭐ ПОЛУЧИТЬ РЕЗУЛЬТАТЫ
                     </button>
                 </div>
@@ -823,6 +823,7 @@
             "Отслеживаю и корректирую своё эмоциональное состояние в течение дня",
             "Делаю практики очищения для тела и эмоций раз в неделю и чаще",
             "Принимаю пищу в спокойной обстановке, не отвлекаясь на гаджеты",
+            "Качественно пережёвываю пищу (каждый кусочек от 60 раз)",
             "Ложусь спать до 23:00",
             "Сплю не менее 7-8 часов в сутки",
             "Делаю утреннюю разминку или зарядку",
@@ -1104,7 +1105,8 @@ ${formData.get('comments') || 'нет'}
                 clientCode,
                 formData,
                 symptomsData,
-                habitsData,
+                habitsAlready,
+                habitsWant,
                 fullMessage
             };
         });
@@ -1154,30 +1156,30 @@ ${formData.get('comments') || 'нет'}
         }
         .header h1 {
             margin: 0;
-            font-size: 36px;
+            font-size: 48px;
             font-weight: 300;
             letter-spacing: 3px;
         }
         .header p {
             margin: 10px 0 0 0;
-            font-size: 18px;
+            font-size: 22px;
             opacity: 0.95;
         }
         .code-box {
             background: #f5e6d3;
-            padding: 15px;
+            padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
         }
         .code-label {
             color: #d4af7a;
-            font-size: 14px;
+            font-size: 18px;
             font-weight: 600;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
         .code-value {
             color: #d4af7a;
-            font-size: 28px;
+            font-size: 36px;
             font-weight: bold;
         }
         .section {
@@ -1185,17 +1187,17 @@ ${formData.get('comments') || 'нет'}
         }
         .section-title {
             color: #d4af7a;
-            font-size: 18px;
+            font-size: 24px;
             border-bottom: 2px solid #f5e6d3;
-            padding-bottom: 8px;
-            margin-bottom: 12px;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
         }
         .measurement-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
             margin: 10px 0;
-            font-size: 17px;
+            font-size: 20px;
         }
         .measurement-card {
             background: #fdfbf7;
@@ -1204,47 +1206,47 @@ ${formData.get('comments') || 'нет'}
         }
         .symptom-item {
             background: #fdfbf7;
-            padding: 12px;
+            padding: 14px;
             margin-bottom: 10px;
             border-radius: 6px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 16px;
+            font-size: 19px;
         }
         .symptom-badge {
             background: #d4af7a;
             color: white;
-            padding: 4px 10px;
+            padding: 6px 12px;
             border-radius: 10px;
-            font-size: 13px;
+            font-size: 16px;
             font-weight: bold;
         }
         .habit-item {
-            padding: 8px 0;
-            font-size: 16px;
+            padding: 10px 0;
+            font-size: 19px;
             line-height: 1.7;
         }
         .goal-box {
             background: #f5e6d3;
-            padding: 15px;
+            padding: 18px;
             border-radius: 6px;
             margin-bottom: 12px;
             border-left: 3px solid #d4af7a;
-            font-size: 16px;
+            font-size: 19px;
             line-height: 1.8;
         }
         .overall-badge {
             display: inline-block;
             background: #d4af7a;
             color: white;
-            width: 140px;
-            height: 140px;
+            width: 180px;
+            height: 180px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 64px;
+            font-size: 80px;
             font-weight: bold;
             margin: 20px auto;
         }
@@ -1254,7 +1256,7 @@ ${formData.get('comments') || 'нет'}
             border-top: 1px solid #e0e0e0;
             text-align: center;
             color: #999;
-            font-size: 12px;
+            font-size: 16px;
         }
     </style>
 </head>
@@ -1319,27 +1321,36 @@ ${formData.get('comments') || 'нет'}
     </div>
     
     <div class="section">
-        <h2 style="color: #7ba67d; font-size: 14px; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; margin-bottom: 12px;">✨ ПРИВЫЧКИ</h2>
-        ${data.habitsData.length > 0 ? data.habitsData.map((h, i) => `
+        <h2 style="color: #4caf50; font-size: 22px; border-bottom: 2px solid #e8f5e9; padding-bottom: 10px; margin-bottom: 15px;">✅ ПРИВЫЧКИ (УЖЕ ЕСТЬ)</h2>
+        ${data.habitsAlready && data.habitsAlready.length > 0 ? data.habitsAlready.map((h, i) => `
             <div class="habit-item">
-                <span style="color: #7ba67d; font-weight: bold;">✓</span> ${i + 1}. ${h}
+                <span style="color: #4caf50; font-weight: bold;">✓</span> ${i + 1}. ${h}
             </div>
-        `).join('') : '<div style="color: #6b6b6b; font-size: 10px;">Привычки не отмечены</div>'}
+        `).join('') : '<div style="color: #6b6b6b; font-size: 18px;">Не отмечены</div>'}
+    </div>
+    
+    <div class="section">
+        <h2 style="color: #ff9800; font-size: 22px; border-bottom: 2px solid #fff3e0; padding-bottom: 10px; margin-bottom: 15px;">💫 ХОЧУ СФОРМИРОВАТЬ</h2>
+        ${data.habitsWant && data.habitsWant.length > 0 ? data.habitsWant.map((h, i) => `
+            <div class="habit-item">
+                <span style="color: #ff9800; font-weight: bold;">→</span> ${i + 1}. ${h}
+            </div>
+        `).join('') : '<div style="color: #6b6b6b; font-size: 18px;">Не отмечены</div>'}
     </div>
     
     <div class="section">
         <h2 class="section-title">🎯 ЦЕЛИ И ОЖИДАНИЯ</h2>
-        <div style="font-size: 10px; line-height: 1.6;">
+        <div style="font-size: 18px; line-height: 1.7;">
             <div class="goal-box">
-                <div style="color: #d4af7a; font-weight: bold; margin-bottom: 5px; font-size: 11px;">💪 Физическое здоровье:</div>
+                <div style="color: #d4af7a; font-weight: bold; margin-bottom: 8px; font-size: 20px;">💪 Физическое здоровье:</div>
                 <div>${data.formData.get('goal_physical') || 'не указано'}</div>
             </div>
             <div class="goal-box">
-                <div style="color: #d4af7a; font-weight: bold; margin-bottom: 5px; font-size: 11px;">💚 Эмоциональное здоровье:</div>
+                <div style="color: #d4af7a; font-weight: bold; margin-bottom: 8px; font-size: 20px;">💚 Эмоциональное здоровье:</div>
                 <div>${data.formData.get('goal_emotional') || 'не указано'}</div>
             </div>
             <div class="goal-box">
-                <div style="color: #d4af7a; font-weight: bold; margin-bottom: 5px; font-size: 11px;">👗 Образ "Новая Я":</div>
+                <div style="color: #d4af7a; font-weight: bold; margin-bottom: 8px; font-size: 20px;">👗 Образ "Новая Я":</div>
                 <div>${data.formData.get('goal_dream_dress') || 'не указано'}</div>
             </div>
         </div>
