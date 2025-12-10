@@ -826,6 +826,13 @@
                     const habitsContainer = document.getElementById('habitsContainer');
                     habitsContainer.innerHTML = '';
                     
+                    // Обратная совместимость: если есть старый формат habits[], конвертируем
+                    if (!data.habitsAlready && !data.habitsWant && data.habits) {
+                        console.log('Обнаружен старый формат, конвертируем...');
+                        data.habitsAlready = data.habits;
+                        data.habitsWant = [];
+                    }
+                    
                     // Привычки "Уже есть"
                     if (data.habitsAlready && data.habitsAlready.length > 0) {
                         const alreadyBlock = document.createElement('div');
@@ -879,6 +886,12 @@
                                 valueDisplay.textContent = this.value + '/10';
                             });
                         });
+                    }
+                    
+                    // Если привычек вообще нет
+                    if ((!data.habitsAlready || data.habitsAlready.length === 0) && 
+                        (!data.habitsWant || data.habitsWant.length === 0)) {
+                        habitsContainer.innerHTML = '<div style="padding: 20px; background: #f5f5f5; border-radius: 8px; text-align: center; color: #666;">Привычки не были отмечены в опроснике ДО</div>';
                     }
                     
                 } else {
