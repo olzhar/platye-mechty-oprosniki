@@ -840,12 +840,12 @@
                     if (data.habitsAlready && data.habitsAlready.length > 0) {
                         const alreadyBlock = document.createElement('div');
                         alreadyBlock.className = 'info-box';
-                        alreadyBlock.style.cssText = 'background: #e8f5e9; border-left: 4px solid #4caf50; margin-bottom: 20px;';
-                        alreadyBlock.innerHTML = '<h3 style="color: #2e7d32; margin-bottom: 12px;">✅ Эти привычки у вас уже есть:</h3>';
+                        alreadyBlock.style.cssText = 'background: #e8f5e9; border-left: 4px solid #4caf50; margin-bottom: 20px; padding: 20px;';
+                        alreadyBlock.innerHTML = '<h3 style="color: #2e7d32; margin-bottom: 15px; font-size: 20px;">✅ Эти привычки у вас уже есть:</h3>';
                         
                         data.habitsAlready.forEach((habit, i) => {
                             const habitDiv = document.createElement('div');
-                            habitDiv.style.cssText = 'padding: 8px 0; color: #2c2c2c; font-size: 0.95em;';
+                            habitDiv.style.cssText = 'padding: 10px 0; color: #2c2c2c; font-size: 18px; line-height: 1.6;';
                             habitDiv.textContent = `${i + 1}. ${habit}`;
                             alreadyBlock.appendChild(habitDiv);
                         });
@@ -857,21 +857,21 @@
                     if (data.habitsWant && data.habitsWant.length > 0) {
                         const wantBlock = document.createElement('div');
                         wantBlock.className = 'info-box';
-                        wantBlock.style.cssText = 'background: #fff3e0; border-left: 4px solid #ff9800; margin-bottom: 20px;';
-                        wantBlock.innerHTML = '<h3 style="color: #e65100; margin-bottom: 15px;">💫 Привычки, над которыми вы работали:</h3><p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">Оцените на какой стадии каждая привычка: 1 - начало, 10 - уже сформирована</p>';
+                        wantBlock.style.cssText = 'background: #fff3e0; border-left: 4px solid #ff9800; margin-bottom: 20px; padding: 20px;';
+                        wantBlock.innerHTML = '<h3 style="color: #e65100; margin-bottom: 18px; font-size: 20px;">💫 Привычки, над которыми вы работали:</h3><p style="font-size: 16px; color: #666; margin-bottom: 18px; line-height: 1.5;">Оцените на какой стадии каждая привычка: 1 - начало, 10 - уже сформирована</p>';
                         
                         data.habitsWant.forEach((habit, index) => {
                             const habitRow = document.createElement('div');
                             habitRow.className = 'habit-progress-row';
-                            habitRow.style.cssText = 'background: white; padding: 15px; margin-bottom: 12px; border-radius: 8px; border: 2px solid #ffe0b2;';
+                            habitRow.style.cssText = 'background: white; padding: 18px; margin-bottom: 15px; border-radius: 8px; border: 2px solid #ffe0b2;';
                             
                             habitRow.innerHTML = `
-                                <div style="margin-bottom: 10px; font-weight: 500; color: #2c2c2c;">${habit}</div>
+                                <div style="margin-bottom: 12px; font-weight: 500; color: #2c2c2c; font-size: 18px;">${habit}</div>
                                 <div style="display: flex; align-items: center; gap: 15px;">
-                                    <input type="range" class="habit-progress-slider" name="habit_want_${index}" min="1" max="10" value="5" data-text="${habit}" style="flex: 1; height: 8px; border-radius: 4px; accent-color: #ff9800; cursor: pointer;">
-                                    <span class="habit-progress-value" style="min-width: 60px; font-weight: 700; color: #ff9800; font-size: 1.1em;">5/10</span>
+                                    <input type="range" class="habit-progress-slider" name="habit_want_${index}" min="1" max="10" value="5" data-text="${habit}" style="flex: 1; height: 10px; border-radius: 5px; accent-color: #ff9800; cursor: pointer;">
+                                    <span class="habit-progress-value" style="min-width: 70px; font-weight: 700; color: #ff9800; font-size: 20px;">5/10</span>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.85em; color: #999;">
+                                <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 14px; color: #999;">
                                     <span>Начало</span>
                                     <span>Сформирована</span>
                                 </div>
@@ -1249,8 +1249,11 @@ ${formData.get('improve_program') || 'не указано'}
                 .then(function(response) {
                     console.log('Email SUCCESS!', response.status, response.text);
                     
-                    // Отправляем в Google Sheets
-                    sendToGoogleSheets(clientCode, formData, symptomsAfter, habitsWantProgress, beforeData, disappeared, decreased, newSymptoms, weightBefore, weightAfter, weightDiff, waistBefore, waistAfter, waistDiff, hipsBefore, hipsAfter, hipsDiff, overallBefore, overallAfter, overallDiff);
+                    // Отправляем в Google Sheets (только один раз)
+                    if (!window.alreadySentToSheetsPosle) {
+                        sendToGoogleSheets(clientCode, formData, symptomsAfter, habitsWantProgress, beforeData, disappeared, decreased, newSymptoms, weightBefore, weightAfter, weightDiff, waistBefore, waistAfter, waistDiff, hipsBefore, hipsAfter, hipsDiff, overallBefore, overallAfter, overallDiff);
+                        window.alreadySentToSheetsPosle = true;
+                    }
                     
                     loader.classList.remove('show');
                     successMessage.classList.add('show');
@@ -1608,22 +1611,22 @@ ${formData.get('improve_program') || 'не указано'}
             </div>
         </div>
         
-        <div style="font-size: 11px; line-height: 1.8; color: #2c2c2c; margin-bottom: 15px;">
-            <p style="margin: 0 0 10px 0;">В результате нашей совместной работы меняется не только тело и мышление, но и вся жизнь.</p>
+        <div style="font-size: 20px; line-height: 1.8; color: #2c2c2c; margin-bottom: 20px;">
+            <p style="margin: 0 0 15px 0; font-weight: 500;">В результате нашей совместной работы меняется не только тело и мышление, но и вся жизнь.</p>
             
-            <div style="margin: 15px 0; text-align: center;">
-                <p style="margin: 0 0 10px 0; font-weight: bold; color: #7ba67d; font-size: 13px;">
+            <div style="margin: 20px 0; text-align: center;">
+                <p style="margin: 0 0 15px 0; font-weight: bold; color: #7ba67d; font-size: 24px;">
                     🎁 Для вас скидка 20% на консультацию!
                 </p>
-                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                     <a href="https://t.me/olga_zharkova_health" 
                        target="_blank" 
-                       style="display: inline-block; padding: 10px 20px; background: linear-gradient(135deg, #0088cc 0%, #0066aa 100%); color: white; text-decoration: none; border-radius: 25px; font-weight: 600; font-size: 12px; box-shadow: 0 4px 12px rgba(0,136,204,0.3);">
+                       style="display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #0088cc 0%, #0066aa 100%); color: white; text-decoration: none; border-radius: 30px; font-weight: 600; font-size: 18px; box-shadow: 0 4px 12px rgba(0,136,204,0.3);">
                         📱 Telegram
                     </a>
                     <a href="https://wa.me/79037562233" 
                        target="_blank" 
-                       style="display: inline-block; padding: 10px 20px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white; text-decoration: none; border-radius: 25px; font-weight: 600; font-size: 12px; box-shadow: 0 4px 12px rgba(37,211,102,0.3);">
+                       style="display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white; text-decoration: none; border-radius: 30px; font-weight: 600; font-size: 18px; box-shadow: 0 4px 12px rgba(37,211,102,0.3);">
                         💬 WhatsApp
                     </a>
                 </div>
@@ -1631,7 +1634,7 @@ ${formData.get('improve_program') || 'не указано'}
         </div>
         
         <div class="channel-box">
-            <div style="font-size: 12px; color: #7ba67d; font-weight: bold; margin-bottom: 8px; text-align: center;">
+            <div style="font-size: 18px; color: #7ba67d; font-weight: bold; margin-bottom: 12px; text-align: center;">
                 📢 Присоединяйтесь к моему Telegram-каналу!
             </div>
             <div style="font-size: 11px; color: #2c2c2c; text-align: center; margin-bottom: 8px;">

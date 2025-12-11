@@ -1093,8 +1093,11 @@ ${formData.get('comments') || 'нет'}
             
             localStorage.setItem(`survey_before_${clientCode}`, JSON.stringify(surveyData));
             
-            // Отправляем данные в Google Sheets
-            sendToGoogleSheets(surveyData, clientCode, formData, symptomsData, habitsAlready, habitsWant);
+            // Отправляем данные в Google Sheets (только один раз)
+            if (!window.alreadySentToSheets) {
+                sendToGoogleSheets(surveyData, clientCode, formData, symptomsData, habitsAlready, habitsWant);
+                window.alreadySentToSheets = true;
+            }
             
             // Показываем успех и код клиенту
             document.getElementById('clientCode').textContent = clientCode;
