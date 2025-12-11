@@ -828,10 +828,13 @@
                     
                     // Обратная совместимость: если есть старый формат habits[], конвертируем
                     if (!data.habitsAlready && !data.habitsWant && data.habits) {
-                        console.log('Обнаружен старый формат, конвертируем...');
+                        console.log('Обнаружен старый формат, конвертируем...', data.habits);
                         data.habitsAlready = data.habits;
                         data.habitsWant = [];
                     }
+                    
+                    console.log('Привычки ALREADY:', data.habitsAlready);
+                    console.log('Привычки WANT:', data.habitsWant);
                     
                     // Привычки "Уже есть"
                     if (data.habitsAlready && data.habitsAlready.length > 0) {
@@ -1008,12 +1011,18 @@
             
             // Собираем данные о привычках ПОСЛЕ
             let habitsWantProgress = [];
+            let habitsAfter = []; // Для PDF
             document.querySelectorAll('.habit-progress-slider').forEach(slider => {
+                const habitText = slider.dataset.text;
                 habitsWantProgress.push({
-                    habit: slider.dataset.text,
+                    habit: habitText,
                     progress: parseInt(slider.value)
                 });
+                habitsAfter.push(habitText); // Добавляем для PDF
             });
+            
+            console.log('Прогресс привычек:', habitsWantProgress);
+            console.log('Привычки для PDF:', habitsAfter);
             
             // Вычисляем изменения
             const weightBefore = beforeData.measurements.weight || 0;
@@ -1239,6 +1248,10 @@ ${formData.get('improve_program') || 'не указано'}
             emailjs.send('service_9m21buc', 'template_cytb9gl', templateParams)
                 .then(function(response) {
                     console.log('Email SUCCESS!', response.status, response.text);
+                    
+                    // Отправляем в Google Sheets
+                    sendToGoogleSheets(clientCode, formData, symptomsAfter, habitsWantProgress, beforeData, disappeared, decreased, newSymptoms, weightBefore, weightAfter, weightDiff, waistBefore, waistAfter, waistDiff, hipsBefore, hipsAfter, hipsDiff, overallBefore, overallAfter, overallDiff);
+                    
                     loader.classList.remove('show');
                     successMessage.classList.add('show');
                     submitBtn.style.display = 'none';
@@ -1269,6 +1282,61 @@ ${formData.get('improve_program') || 'не указано'}
         // Функция генерации PDF со сравнением
         
         // Функция генерации PDF со сравнением через печать
+        
+        // Функция отправки в Google Sheets
+        async function sendToGoogleSheets(clientCode, formData, symptomsAfter, habitsWantProgress, beforeData, disappeared, decreased, newSymptoms, weightBefore, weightAfter, weightDiff, waistBefore, waistAfter, waistDiff, hipsBefore, hipsAfter, hipsDiff, overallBefore, overallAfter, overallDiff) {
+            const googleSheetsUrl = 'https://script.google.com/macros/s/AKfycbxeXpTT1vaaYPNNsB5UTWOQE_G9cZaeP7x5fV6HVTqGv6xcaQHeoz0s07lyuXZgRKaF/exec';
+            
+            const data = {
+                surveyType: 'POSLE',
+                clientCode: clientCode,
+                name: formData.get('name'),
+                age: formData.get('age'),
+                email: formData.get('email'),
+                phone: formData.get('phone') || '',
+                weightAfter: weightAfter,
+                heightAfter: formData.get('height'),
+                waistAfter: waistAfter || '',
+                hipsAfter: hipsAfter || '',
+                weightBefore: weightBefore,
+                waistBefore: waistBefore || '',
+                hipsBefore: hipsBefore || '',
+                weightDiff: weightDiff,
+                waistDiff: waistDiff || '',
+                hipsDiff: hipsDiff || '',
+                symptomsDisappeared: disappeared.map(s => `${s.symptom} (${s.before}/10)`).join(', '),
+                symptomsDecreased: decreased.map(s => `${s.symptom}: ${s.before}→${s.after}`).join(', '),
+                symptomsNew: newSymptoms.map(s => `${s.symptom} (${s.intensity}/10)`).join(', '),
+                habitsProgress: habitsWantProgress,
+                goalPhysicalAchieved: formData.get('goal_physical_achieved') || '',
+                goalEmotionalAchieved: formData.get('goal_emotional_achieved') || '',
+                goalDreamDressAchieved: formData.get('goal_dream_dress_achieved') || '',
+                goalsRealized: formData.get('goals_realized') || '',
+                whatWasDifficult: formData.get('what_was_difficult') || '',
+                whatToImprove: formData.get('what_to_improve') || '',
+                testimonial: formData.get('testimonial') || '',
+                overallBefore: overallBefore,
+                overallAfter: overallAfter,
+                overallDiff: overallDiff
+            };
+            
+            try {
+                const response = await fetch(googleSheetsUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                console.log('✅ Данные отправлены в Google Sheets (ПОСЛЕ)');
+            } catch (error) {
+                console.error('❌ Ошибка отправки в Google Sheets:', error);
+                // Не прерываем работу опросника даже если Google Sheets не работает
+            }
+        }
+        
         function generatePDF() {
             const data = window.surveyDataAfterForPdf;
             const beforeData = data.beforeData;
