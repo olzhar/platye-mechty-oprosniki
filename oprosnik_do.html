@@ -642,6 +642,30 @@
 <input type="number" id="age" name="age" min="18" max="100" required>
                         </div>
                     </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Телефон *</label>
+                            <input type="tel" id="phone" name="phone" placeholder="+7 (___) ___-__-__" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Согласие на обработку персональных данных -->
+                    <div class="form-group" style="margin-top: 25px;">
+                        <div style="background: #fff3e0; border: 2px solid #ff9800; border-radius: 12px; padding: 20px;">
+                            <label style="display: flex; align-items: center; cursor: pointer; font-size: 18px; font-weight: 600; color: #2c2c2c;">
+                                <input type="checkbox" id="gdpr_consent" name="gdpr_consent" required 
+                                       style="width: 24px; height: 24px; margin-right: 15px; cursor: pointer; accent-color: #ff9800;">
+                                <span>Даю согласие на обработку персональных данных *</span>
+                            </label>
+                            <p style="margin: 12px 0 0 39px; font-size: 14px; color: #666; line-height: 1.6;">
+                                Я согласен(а) на обработку моих персональных данных в соответствии с политикой конфиденциальности
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Антропометрические данные -->
@@ -730,7 +754,7 @@
                             ⚠️ ВАЖНО! Хронические состояния и особенности *
                         </label>
                         <p style="font-size: 0.9em; color: #666; margin: 8px 0 12px 0;">
-                            Напишите ваши хронические состояния и особенности (например: удалён желчный пузырь, камни в жёлчном/почках, хронические запоры, СРК, СИБР, СИГР, непереносимость определённых продуктов и др.)
+                            Напишите ваши хронические состояния и особенности (аутоиммунные состояния, камни в почках, желчном пузыре, удалён желчный пузырь, хронические запоры, СРК, СИБР, СИГР, непереносимость определённых продуктов и др.)
                         </p>
                         <textarea id="chronic_conditions" name="chronic_conditions" required 
                                   placeholder="Опишите ваши хронические состояния, особенности здоровья, непереносимости..." 
@@ -946,6 +970,14 @@
         document.getElementById('surveyForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // Проверка согласия на обработку данных
+            const gdprConsent = document.getElementById('gdpr_consent');
+            if (!gdprConsent.checked) {
+                alert('⚠️ Необходимо дать согласие на обработку персональных данных для продолжения');
+                gdprConsent.focus();
+                return;
+            }
+            
             const submitBtn = document.getElementById('submitBtn');
             const loader = document.getElementById('loader');
             
@@ -1068,7 +1100,9 @@ ${formData.get('comments') || 'нет'}
                 timestamp: new Date().toISOString(),
                 personalData: {
                     name: formData.get('name'),
-                    age: formData.get('age')
+                    age: formData.get('age'),
+                    email: formData.get('email'),
+                    phone: formData.get('phone')
                 },
                 measurements: {
                     weight: formData.get('weight'),

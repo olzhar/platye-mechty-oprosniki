@@ -571,6 +571,30 @@
                             <input type="number" id="age" name="age" min="18" max="100" required>
                         </div>
                     </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Телефон *</label>
+                            <input type="tel" id="phone" name="phone" placeholder="+7 (___) ___-__-__" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Согласие на обработку персональных данных -->
+                    <div class="form-group" style="margin-top: 25px;">
+                        <div style="background: #fff3e0; border: 2px solid #ff9800; border-radius: 12px; padding: 20px;">
+                            <label style="display: flex; align-items: center; cursor: pointer; font-size: 18px; font-weight: 600; color: #2c2c2c;">
+                                <input type="checkbox" id="gdpr_consent" name="gdpr_consent" required 
+                                       style="width: 24px; height: 24px; margin-right: 15px; cursor: pointer; accent-color: #ff9800;">
+                                <span>Даю согласие на обработку персональных данных *</span>
+                            </label>
+                            <p style="margin: 12px 0 0 39px; font-size: 14px; color: #666; line-height: 1.6;">
+                                Я согласен(а) на обработку моих персональных данных в соответствии с политикой конфиденциальности
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Антропометрические данные -->
@@ -788,18 +812,6 @@
             symptomsContainer.appendChild(div);
         });
 
-        // Генерация привычек
-        const habitsContainer = document.getElementById('habitsContainer');
-        habits.forEach((habit, index) => {
-            const div = document.createElement('div');
-            div.className = 'checkbox-item';
-            div.innerHTML = `
-                <input type="checkbox" class="habit-checkbox" id="habit_${index}" data-text="${habit}">
-                <label for="habit_${index}">${habit}</label>
-            `;
-            habitsContainer.appendChild(div);
-        });
-
         // Загрузка целей из опросника ДО
         function loadGoalsFromBefore() {
             const clientCode = document.getElementById('clientCode').value.toUpperCase().trim();
@@ -965,6 +977,14 @@
         // Обработка отправки формы
         document.getElementById('surveyForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            // Проверка согласия на обработку данных
+            const gdprConsent = document.getElementById('gdpr_consent');
+            if (!gdprConsent.checked) {
+                alert('⚠️ Необходимо дать согласие на обработку персональных данных для продолжения');
+                gdprConsent.focus();
+                return;
+            }
             
             const submitBtn = document.getElementById('submitBtn');
             const loader = document.getElementById('loader');
