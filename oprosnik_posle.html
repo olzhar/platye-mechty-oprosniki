@@ -1105,20 +1105,6 @@
                 symptomsReport = '\nСимптомы не отмечены\n';
             }
             
-            let habitsReport = '';
-            if (newHabits.length > 0) {
-                habitsReport += '\n✨ НОВЫЕ ПРИВЫЧКИ:\n';
-                newHabits.forEach((h, i) => {
-                    habitsReport += `   ${i + 1}. ${h}\n`;
-                });
-            }
-            if (lostHabits.length > 0) {
-                habitsReport += '\n❌ УТРАЧЕННЫЕ ПРИВЫЧКИ:\n';
-                lostHabits.forEach((h, i) => {
-                    habitsReport += `   ${i + 1}. ${h}\n`;
-                });
-            }
-            
             const fullMessage = `
 ╔════════════════════════════════════════╗
    РЕЗУЛЬТАТЫ "ПЛАТЬЕ МЕЧТЫ" - ПОСЛЕ ПРОГРАММЫ
