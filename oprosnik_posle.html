@@ -573,26 +573,19 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="email">Email *</label>
-                            <input type="email" id="email" name="email" required>
-                        </div>
-                        <div class="form-group">
                             <label for="phone">Телефон *</label>
                             <input type="tel" id="phone" name="phone" placeholder="+7 (___) ___-__-__" required>
                         </div>
                     </div>
                     
                     <!-- Согласие на обработку персональных данных -->
-                    <div class="form-group" style="margin-top: 25px;">
-                        <div style="background: #fff3e0; border: 2px solid #ff9800; border-radius: 12px; padding: 20px;">
-                            <label style="display: flex; align-items: center; cursor: pointer; font-size: 18px; font-weight: 600; color: #2c2c2c;">
+                    <div class="form-group" style="margin-top: 20px;">
+                        <div style="background: #fff3e0; border: 2px solid #ff9800; border-radius: 8px; padding: 12px 15px;">
+                            <label style="display: flex; align-items: center; cursor: pointer; font-size: 15px; font-weight: 600; color: #2c2c2c;">
                                 <input type="checkbox" id="gdpr_consent" name="gdpr_consent" required 
-                                       style="width: 24px; height: 24px; margin-right: 15px; cursor: pointer; accent-color: #ff9800;">
+                                       style="width: 20px; height: 20px; margin-right: 10px; cursor: pointer; accent-color: #ff9800;">
                                 <span>Даю согласие на обработку персональных данных *</span>
                             </label>
-                            <p style="margin: 12px 0 0 39px; font-size: 14px; color: #666; line-height: 1.6;">
-                                Я согласен(а) на обработку моих персональных данных в соответствии с политикой конфиденциальности
-                            </p>
                         </div>
                     </div>
                 </div>
@@ -826,9 +819,8 @@
                     document.getElementById('goal_emotional_before').textContent = data.goals.goal_emotional || 'не указана';
                     document.getElementById('goal_dream_dress_before').textContent = data.goals.goal_dream_dress || 'не указан';
                     
-                    // Подставляем имя и email
+                    // Подставляем имя, возраст, телефон
                     document.getElementById('name').value = data.personalData.name;
-                    document.getElementById('email').value = data.personalData.email;
                     document.getElementById('age').value = data.personalData.age;
                     if (data.personalData.phone) {
                         document.getElementById('phone').value = data.personalData.phone;
@@ -1315,7 +1307,6 @@ ${formData.get('improve_program') || 'не указано'}
                 clientCode: clientCode,
                 name: formData.get('name'),
                 age: formData.get('age'),
-                email: formData.get('email'),
                 phone: formData.get('phone') || '',
                 weightAfter: weightAfter,
                 heightAfter: formData.get('height'),
@@ -1484,31 +1475,31 @@ ${formData.get('improve_program') || 'не указано'}
             margin-top: 20px;
         }
     </style>
-</head>
+</ head>
 <body>
     <div class="header">
-        <h1 style="margin: 0; font-size: 36px; font-weight: 300; letter-spacing: 3px;">ПЛАТЬЕ МЕЧТЫ</h1>
-        <p style="margin: 10px 0 0 0; font-size: 20px; font-weight: 500;">🎉 ПОЗДРАВЛЯЕМ! 🎉</p>
-        <p style="margin: 5px 0 0 0; font-size: 16px; opacity: 0.95;">Результаты ПОСЛЕ программы</p>
+        <h1 style="margin: 0; font-size: 72px; font-weight: 300; letter-spacing: 3px;">ПЛАТЬЕ МЕЧТЫ</h1>
+        <p style="margin: 20px 0 0 0; font-size: 40px; font-weight: 500;">🎉 ПОЗДРАВЛЯЕМ! 🎉</p>
+        <p style="margin: 10px 0 0 0; font-size: 32px; opacity: 0.95;">Результаты ПОСЛЕ программы</p>
     </div>
     
     <div class="congrats-box">
-        <div style="font-weight: bold; color: #2c2c2c; font-size: 18px; padding: 10px 0;">${data.formData.get('name')}, вы завершили программу!</div>
+        <div style="font-weight: bold; color: #2c2c2c; font-size: 36px; padding: 20px 0;">${data.formData.get('name')}, вы завершили программу!</div>
     </div>
     
-    <div style="margin: 25px 0;">
-        <h2 style="color: #7ba67d; font-size: 26px; border-bottom: 2px solid #e8f5e9; padding-bottom: 10px; margin-bottom: 15px;">
+    <div style="margin: 50px 0;">
+        <h2 style="color: #7ba67d; font-size: 52px; border-bottom: 2px solid #e8f5e9; padding-bottom: 20px; margin-bottom: 30px;">
             📊 СРАВНЕНИЕ АНТРОПОМЕТРИИ
         </h2>
-        <div class="comparison-grid" style="font-weight: bold; color: #6b6b6b; font-size: 18px;">
+        <div class="comparison-grid" style="font-weight: bold; color: #6b6b6b; font-size: 36px;">
             <div>ДО</div>
             <div>ПОСЛЕ</div>
             <div>ИЗМЕНЕНИЕ</div>
         </div>
         
         <div class="comparison-row">
-            <div style="font-size: 20px; color: #6b6b6b; margin-bottom: 8px; font-weight: 600;">ВЕС</div>
-            <div class="comparison-grid" style="font-size: 22px; font-weight: bold;">
+            <div style="font-size: 40px; color: #6b6b6b; margin-bottom: 16px; font-weight: 600;">ВЕС</div>
+            <div class="comparison-grid" style="font-size: 44px; font-weight: bold;">
                 <div>${weightBefore} кг</div>
                 <div style="color: #7ba67d;">${weightAfter} кг</div>
                 <div style="color: ${weightDiff < 0 ? '#7ba67d' : '#c1272d'};">
@@ -1519,8 +1510,8 @@ ${formData.get('improve_program') || 'не указано'}
         
         ${waistDiff ? `
         <div class="comparison-row">
-            <div style="font-size: 20px; color: #6b6b6b; margin-bottom: 8px; font-weight: 600;">ТАЛИЯ</div>
-            <div class="comparison-grid" style="font-size: 22px; font-weight: bold;">
+            <div style="font-size: 40px; color: #6b6b6b; margin-bottom: 16px; font-weight: 600;">ТАЛИЯ</div>
+            <div class="comparison-grid" style="font-size: 44px; font-weight: bold;">
                 <div>${waistBefore} см</div>
                 <div style="color: #7ba67d;">${waistAfter} см</div>
                 <div style="color: ${waistDiff < 0 ? '#7ba67d' : '#c1272d'};">
@@ -1653,39 +1644,43 @@ ${formData.get('improve_program') || 'не указано'}
             </div>
         </div>
         
-        <div class="channel-box">
-            <div style="font-size: 18px; color: #7ba67d; font-weight: bold; margin-bottom: 12px; text-align: center;">
+        <div class="channel-box" style="margin-top: 30px;">
+            <div style="font-size: 54px; color: #7ba67d; font-weight: bold; margin-bottom: 20px; text-align: center;">
                 📢 Присоединяйтесь к моему Telegram-каналу!
             </div>
-            <div style="font-size: 11px; color: #2c2c2c; text-align: center; margin-bottom: 8px;">
-                <strong>"Путь к здоровью и призванию"</strong>
-            </div>
-            <div style="font-size: 10px; text-align: center; margin-bottom: 10px;">
-                <a href="https://t.me/izdorovi" target="_blank" style="color: #7ba67d; text-decoration: none; font-weight: bold;">t.me/izdorovi</a>
-            </div>
-            <div style="font-size: 9px; color: #6b6b6b; text-align: center; line-height: 1.5;">
-                О питании, здоровье и психологии для женщин
-            </div>
+            <a href="https://t.me/izdorovi" target="_blank" style="display: block; text-decoration: none;">
+                <div style="background: linear-gradient(135deg, #7ba67d 0%, #6b9670 100%); padding: 30px 40px; border-radius: 20px; box-shadow: 0 8px 25px rgba(123, 166, 125, 0.4); transition: all 0.3s; cursor: pointer; text-align: center; margin: 25px 0;">
+                    <div style="font-size: 48px; color: white; font-weight: bold; margin-bottom: 15px;">
+                        "Путь к здоровью и призванию"
+                    </div>
+                    <div style="font-size: 36px; color: rgba(255,255,255,0.95); font-weight: 600;">
+                        t.me/izdorovi
+                    </div>
+                    <div style="font-size: 30px; color: rgba(255,255,255,0.9); margin-top: 15px; line-height: 1.5;">
+                        О питании, здоровье и психологии для женщин
+                    </div>
+                </div>
+            </a>
         </div>
         
-        <div style="border-top: 2px solid #d4af7a; padding-top: 15px; margin-top: 15px; text-align: center;">
-            <div style="font-size: 11px; color: #7ba67d; font-weight: bold; margin-bottom: 10px;">
+        <div style="border-top: 2px solid #d4af7a; padding-top: 30px; margin-top: 30px; text-align: center;">
+            <div style="font-size: 36px; color: #7ba67d; font-weight: bold; margin-bottom: 20px;">
                 С любовью и верой в вас! 💚
             </div>
             
-            <div style="font-size: 12px; color: #d4af7a; font-weight: bold; margin-bottom: 8px;">
+            <div style="font-size: 42px; color: #d4af7a; font-weight: bold; margin-bottom: 20px;">
                 ПЛАТЬЕ МЕЧТЫ 👗
             </div>
-            <div style="font-size: 11px; color: #2c2c2c; font-weight: bold; margin-bottom: 8px;">
+            <div style="font-size: 36px; color: #2c2c2c; font-weight: bold; margin-bottom: 20px;">
                 Ольга Жаркова
             </div>
-            <div style="font-size: 10px; color: #6b6b6b; margin-bottom: 3px;">
+            <div style="font-size: 32px; color: #6b6b6b; margin-bottom: 15px;">
                 Нутрициолог-психолог
             </div>
-            <div style="font-size: 10px; color: #2c2c2c; margin-bottom: 3px;">
+            <div style="font-size: 32px; color: #2c2c2c; margin-bottom: 15px;">
                 📞 +7-903-756-22-33
             </div>
-            <div style="font-size: 10px; margin-top: 5px;">
+            <div style="font-size: 32px; margin-top: 15px;">
                 📱 <a href="https://t.me/olga_zharkova_health" target="_blank" style="color: #2c2c2c; text-decoration: none;">t.me/olga_zharkova_health</a>
             </div>
         </div>
